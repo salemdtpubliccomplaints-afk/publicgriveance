@@ -276,6 +276,7 @@ def save():
     citizen_name = request.form["citizen_name"]
     mobile = request.form["mobile"]
     ward_no = request.form["ward_no"]
+    division_no = request.form["division_no"]
     category = request.form["category"]
     description = request.form["description"]
 
@@ -289,17 +290,19 @@ def save():
             citizen_name,
             mobile,
             ward_no,
+            division_no,
             category,
             description,
             status
         )
-        VALUES(?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?)
         """,
         (
             complaint_no,
             citizen_name,
             mobile,
             ward_no,
+            division_no,
             category,
             description,
             "Open"
@@ -353,6 +356,7 @@ def update(id):
         SET citizen_name=?,
             mobile=?,
             ward_no=?,
+            division_no=?,
             category=?,
             description=?
         WHERE id=?
@@ -361,6 +365,7 @@ def update(id):
             request.form['citizen_name'],
             request.form['mobile'],
             request.form['ward_no'],
+            request.form['division_no'],
             request.form['category'],
             request.form['description'],
             id
