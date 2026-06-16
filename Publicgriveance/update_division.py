@@ -1,34 +1,40 @@
 import sqlite3
 
 conn = sqlite3.connect("grievance.db")
-
 cursor = conn.cursor()
 
-try:
-    cursor.execute("""
-    ALTER TABLE complaints
-    ADD COLUMN division_no TEXT
-    """)
-
-    print("Division No column added.")
-print("Zonal Office column added.")
-print("Assigned Officer column added.")
-print("Date of Complaint column added.")
-print("Ward Notification Status column added.")
-print("Ward Representative column added.")
-print("Response Details column added.")
-print("Informed To Dept column added.")
-print("Initial Action Status column added.")
-print("Progress Update Status column added.")
-print("Final Resolution Status column added.")
-print("Remarks & Notes column added.")  
-
-
-
+columns = [
+    "zonal_office TEXT",
+    "ward_no TEXT",
+    "complaint_attender TEXT",
+    "complaint_date TEXT",
+    "ward_notification_status TEXT",
+    "ward_representative TEXT",
+    "response_details TEXT",
+    "informed_to_department TEXT",
+    "inital_action_status TEXT",
+    "progress_update_status TEXT",
+    "final_resolution_status TEXT",
+    "remarks_&_notes TEXT",
+    "petitioner_address TEXT"
     
+]
 
-except Exception as e:
-    print(e)
+for column in columns:
+
+    try:
+
+        cursor.execute(
+            f"ALTER TABLE complaints ADD COLUMN {column}"
+        )
+
+        print(f"Added {column}")
+
+    except Exception as e:
+
+        print(f"Skipped {column}")
 
 conn.commit()
 conn.close()
+
+print("Database Updated")

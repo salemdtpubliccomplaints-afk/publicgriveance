@@ -49,20 +49,23 @@ def initialize_database():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS complaints(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        complaint_no TEXT,
-        citizen_name TEXT,
+        complaint_attender TEXT,
+        complaint_date TEXT,
+        zonal_office TEXT,
+        petitioner_name TEXT,
         mobile TEXT,
+        petitioner_address TEXT,
         ward_no TEXT,
         category TEXT,
         description TEXT,
-        status TEXT,
-        village TEXT,
-        area TEXT,
-        assigned_to TEXT,
-        priority TEXT,
-        remarks TEXT,
-        followup_date TEXT,
-        created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ward_notification_status TEXT,
+        ward_representative TEXT,
+        response_details TEXT,
+        informed_to_department TEXT,
+        inital_action_status TEXT,
+        progress_update_status TEXT,
+        final_resolution_status TEXT,
+        remarks_&_notes TEXT
     )
     """)
 
@@ -272,13 +275,24 @@ def add():
 @app.route("/save", methods=["POST"])
 def save():
 
-    complaint_no = request.form["complaint_no"]
-    citizen_name = request.form["citizen_name"]
+    complaint_attender = request.form["complaint_attender"]
+    complaint_date = request.form["complaint_date"]
+    zonal_office = request.form["zonal_office"]
+    petitioner_name = request.form["petitioner_name"]
     mobile = request.form["mobile"]
+    petitioner_address = request.form["petitioner_address"]
     ward_no = request.form["ward_no"]
-    division_no = request.form["division_no"]
     category = request.form["category"]
     description = request.form["description"]
+    ward_notification_status = request.form["ward_notification_status"]
+    ward_representative = request.form["ward_representative"]
+    response_details = request.form["response_details"]
+    informed_to_department = request.form["informed_to_department"]
+    inital_action_status = request.form["inital_action_status"]
+    progress_update_status = request.form["progress_update_status"]
+    final_resolution_status = request.form["final_resolution_status"]
+    remarks_&_notes = request.form[" remarks_&_notes"]
+
 
     conn = get_db()
 
@@ -286,26 +300,45 @@ def save():
         """
         INSERT INTO complaints
         (
-            complaint_no,
-            citizen_name,
-            mobile,
-            ward_no,
-            division_no,
-            category,
-            description,
-            status
+        complaint_attender,
+        complaint_date,
+        zonal_office,
+        petitioner_name,
+        mobile,
+        petitioner_address,
+        ward_no,
+        category,
+        description,
+        ward_notification_status,
+        ward_representative,
+        response_details,
+        informed_to_department,
+        inital_action_status,
+        progress_update_status,
+        final_resolution_status,
+        remarks_&_notes
         )
-        VALUES(?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
-            complaint_no,
-            citizen_name,
-            mobile,
-            ward_no,
-            division_no,
-            category,
-            description,
-            "Open"
+        complaint_attender,
+        complaint_date,
+        zonal_office,
+        petitioner_name,
+        mobile,
+        petitioner_address,
+        ward_no,
+        category,
+        description,
+        ward_notification_status,
+        ward_representative,
+        response_details,
+        informed_to_department,
+        inital_action_status,
+        progress_update_status,
+        final_resolution_status,
+        remarks_&_notes,
+        "Open"
         )
     )
 
@@ -353,21 +386,43 @@ def update(id):
     conn.execute(
         """
         UPDATE complaints
-        SET citizen_name=?,
-            mobile=?,
-            ward_no=?,
-            division_no=?,
-            category=?,
-            description=?
+        SET  complaint_attender=?,
+        complaint_date=?,
+        zonal_office=?,
+        petitioner_name=?,
+        mobile=?,
+        petitioner_address=?,
+        ward_no=?,
+        category=?,
+        description=?,
+        ward_notification_status=?,
+        ward_representative=?,
+        response_details=?,
+        informed_to_department=?,
+        inital_action_status=?,
+        progress_update_status=?,
+        final_resolution_status=?,
+        remarks_&_notes=?
         WHERE id=?
         """,
         (
-            request.form['citizen_name'],
+            request.form['complaint_attender'],
+            request.form['complaint_date'],
+            request.form['zonal_office'],
+            request.form['petitioner_name'],
             request.form['mobile'],
+            request.form['petitioner_address'],
             request.form['ward_no'],
-            request.form['division_no'],
             request.form['category'],
             request.form['description'],
+            request.form['ward_notification_status'],
+            request.form['ward_representative'],
+            request.form['response_details'],
+            request.form['informed_to_department'],
+            request.form['inital_action_status'],
+            request.form['progress_update_status'],
+            request.form['final_resolution_status'],
+            request.form['remarks_&_notes'],
             id
         )
     )

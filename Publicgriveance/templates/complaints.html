@@ -57,14 +57,23 @@ Search
 
 <tr>
 <th>ID</th>
-<th>Complaint No</th>
-<th>Name</th>
+<th>Complaint Attender</th>
+<th>Complaint Date</th>
+<th>Zonal Office</th>
+<th>Petitioner Name</th>
 <th>Mobile</th>
-<th>Ward</th>
-<th>Division No</th>
-<th>Category</th>
-<th>Status</th>
-<th>Action</th>
+<th>Petitioner Address</th>
+<th>Ward No</th>
+<th>Cateory</th>
+<th>Description</th>
+<th>Ward Notification Status</th>
+<th>Ward Representative</th>
+<th>Response Details</th>
+<th>Informed To Department</th>
+<th>Initial Action Status</th>
+<th>Progress Update Status</th>
+<th>Final Resoluton Details</th> 
+<th>Remarks & Notes</th>
 </tr>
 
 {% for row in complaints %}
@@ -72,13 +81,24 @@ Search
 <tr>
 
 <td>{{row.id}}</td>
-<td>{{row.complaint_no}}</td>
-<td>{{row.citizen_name}}</td>
-<td>{{row.mobile}}</td>
-<td>{{row.ward_no}}</td>
-<td>{{ row['division_no'] }}</td>
+<td>{{row.complaint_attender}}</td>
+<td>{{row.complaint_date}}</td>
+<td>{{row.zonal_office}}</td>
+<td>{{row.petitioner_name}}</td>
+<td>{{ row['mobile'] }}</td>
+<td>{{row.petitioner_address}}</td>
+<td>{{row['ward_no']}}</td>
 <td>{{row.category}}</td>
-<td>{{row.status}}</td>
+<td>{{row.description}}</td>
+<td>{{row.ward_notification_status}}</td>
+<td>{{row.ward_representative}}</td>
+<td>{{row.response_details}}</td>
+<td>{{row.informed_to_department}}</td>
+<td>{{row.inital_action_status}}</td>
+<td>{{row.progress_update_status}}</td>
+<td>{{row.final_resolution_status}}</td>
+<td>{{row.remarks_&_notes}}</td>
+
 
 <td>
 
