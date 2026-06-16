@@ -18,7 +18,9 @@ app.secret_key = "grievance_secret"
 
 DB_FILE = "grievance.db"
 
-
+@app.route("/")
+def home():
+    ...
 def get_db():
 
     conn = sqlite3.connect(
