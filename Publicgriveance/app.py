@@ -1,8 +1,13 @@
+import os
+import sqlite3
+import pandas as pd
+
 from flask import Flask
 from flask import render_template
 from flask import request
 from flask import redirect
 from flask import session
+
 
 import sqlite3
 import pandas as pd
@@ -11,11 +16,77 @@ app = Flask(__name__)
 
 app.secret_key = "grievance_secret"
 
+DB_FILE = "grievance.db"
+
 
 def get_db():
-    conn = sqlite3.connect("grievance.db")
+
+    conn = sqlite3.connect(
+        DB_FILE,
+        check_same_thread=False
+    )
+
     conn.row_factory = sqlite3.Row
+
     return conn
+
+
+def initialize_database():
+
+    conn = sqlite3.connect(DB_FILE)
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        role TEXT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS complaints(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        complaint_no TEXT,
+        citizen_name TEXT,
+        mobile TEXT,
+        ward_no TEXT,
+        category TEXT,
+        description TEXT,
+        status TEXT,
+        village TEXT,
+        area TEXT,
+        assigned_to TEXT,
+        priority TEXT,
+        remarks TEXT,
+        followup_date TEXT,
+        created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cursor.execute("""
+    INSERT OR IGNORE INTO users
+    (
+        username,
+        password,
+        role
+    )
+    VALUES
+    (
+        'admin',
+        'admin123',
+        'Admin'
+    )
+    """)
+
+    conn.commit()
+
+    conn.close()
+
+
+initialize_database()
 
 
 # ---------------------------
@@ -61,6 +132,9 @@ def login():
 @app.route('/dashboard')
 def dashboard():
 
+    if 'user' not in session:
+        return redirect('/login_page')
+
     conn = get_db()
 
     total = conn.execute(
@@ -93,6 +167,9 @@ def dashboard():
 
 @app.route("/")
 def home():
+
+    if 'user' not in session:
+        return redirect('/login_page')
 
     conn = get_db()
 
@@ -180,6 +257,11 @@ def filter_ward():
 
 @app.route("/add")
 def add():
+
+    if 'user' not in session:
+        return redirect('/login_page')
+
+    return render_template("add_complaint.html")
     return render_template("add_complaint.html")
 
 
@@ -363,8 +445,19 @@ def export():
 
 
 # ---------------------------
+@app.route('/logout')
+def logout():
+
+    session.clear()
+
+    return redirect('/login_page')
 # MAIN
 # ---------------------------
 
 if __name__ == "__main__":
-    app.run(debug=True)
+
+    app.run(
+        host="192.168.0.6",
+        port=5000,
+        debug=True
+    )
