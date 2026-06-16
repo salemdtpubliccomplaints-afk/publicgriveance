@@ -12,6 +12,36 @@ rel="stylesheet">
 
 <body>
 
+<div class="container-fluid bg-success text-white shadow p-3">
+
+    <div class="row align-items-center">
+
+        <div class="col-md-2 text-center">
+
+            <img
+                src="{{ url_for('static', filename='images/logo.png') }}"
+                width="90">
+
+        </div>
+
+        <div class="col-md-10">
+
+            <h2 class="mb-0">
+                சேலம் தெற்கு (090) சட்ட மன்றத் தொகுதி - மக்கள் கோரிக்கைகள்
+            </h2>
+
+            <small>
+                Public Complaint Monitoring & Tracking System
+            </small>
+
+        </div>
+
+    </div>
+
+</div>
+
+<br>
+
 <div class="container mt-4">
 
 <h2>Public Grievance Registration</h2>
@@ -36,7 +66,7 @@ Back
 
 <div class="col-md-4">
 <label>Zonal Office</label>
-<select name="Zonal Office" class="form-control">
+<select name="zonal_office" class="form-control">
 <option>--Select--</option>
 <option>Ammapet Zone-III</option>
 <option>Kondalampatty Zone-IV</option>

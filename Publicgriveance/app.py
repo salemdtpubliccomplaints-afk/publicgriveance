@@ -274,28 +274,27 @@ def add():
 @app.route("/save", methods=["POST"])
 def save():
 
-    complaint_attender = request.form["complaint_attender"]
-    complaint_date = request.form["complaint_date"]
-    zonal_office = request.form["zonal_office"]
-    petitioner_name = request.form["petitioner_name"]
-    mobile = request.form["mobile"]
-    petitioner_address = request.form["petitioner_address"]
-    ward_no = request.form["ward_no"]
-    category = request.form["category"]
-    description = request.form["description"]
-    ward_notification_status = request.form["ward_notification_status"]
-    ward_representative = request.form["ward_representative"]
-    response_details = request.form["response_details"]
-    informed_to_department = request.form["informed_to_department"]
-    inital_action_status = request.form["inital_action_status"]
-    progress_update_status = request.form["progress_update_status"]
-    final_resolution_status = request.form["final_resolution_status"]
-    remarks_notes = request.form["remarks_notes"]
+  complaint_attender = request.form.get("complaint_attender", "")
+  complaint_date = request.form.get("complaint_date", "")
+  zonal_office = request.form.get("zonal_office", "")
+  petitioner_name = request.form.get("petitioner_name", "")
+  mobile = request.form.get("mobile", "")
+  petitioner_address = request.form.get("petitioner_address", "")
+  ward_no = request.form.get("ward_no", "")
+  category = request.form.get("category", "")
+  description = request.form.get("description", "")
+  ward_notification_status = request.form.get("ward_notification_status", "")
+  ward_representative = request.form.get("ward_representative", "")
+  response_details = request.form.get("response_details", "")
+  informed_to_department = request.form.get("informed_to_department", "")
+  inital_action_status = request.form.get("inital_action_status", "")
+  progress_update_status = request.form.get("progress_update_status", "")
+  final_resolution_status = request.form.get("final_resolution_status", "")
+  remarks_and_notes = request.form.get("remarks_notes", "")
 
+  conn = get_db()
 
-    conn = get_db()
-
-    conn.execute(
+  conn.execute(
         """
         INSERT INTO complaints
         (
@@ -315,7 +314,7 @@ def save():
         inital_action_status,
         progress_update_status,
         final_resolution_status,
-        remarks_notes,
+        remarks_and_notes,
         status
         )
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
@@ -337,15 +336,15 @@ def save():
         inital_action_status,
         progress_update_status,
         final_resolution_status,
-        remarks_notes,
+        remarks_and_notes,
         "Open"
         )
     )
 
-    conn.commit()
-    conn.close()
+  conn.commit()
+  conn.close()
 
-    return redirect("/")
+  return redirect("/")
 
 
 # ---------------------------
@@ -405,7 +404,7 @@ def update(id):
         inital_action_status=?,
         progress_update_status=?,
         final_resolution_status=?,
-        remarks_notes=?
+        remarks_and_notes=?
         WHERE id=?
         """,
         (

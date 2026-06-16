@@ -10,6 +10,36 @@
 </head>
 
 <body>
+<div class="container-fluid bg-success text-white shadow p-3">
+
+    <div class="row align-items-center">
+
+        <div class="col-md-2 text-center">
+
+            <img
+                src="{{ url_for('static', filename='images/logo.png') }}"
+                width="90">
+
+        </div>
+
+        <div class="col-md-10">
+
+            <h2 class="mb-0">
+                சேலம் தெற்கு (090) சட்ட மன்றத் தொகுதி - மக்கள் கோரிக்கைகள்
+            </h2>
+
+            <small>
+                Public Complaint Monitoring & Tracking System
+            </small>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<br>
 
 <div class="container mt-4">
 
@@ -53,21 +83,15 @@ value="{{ row['zonal_office'] }}">
 <div class="row">
 
 <div class="col-md-4">
-<label>Division Number</label>
-<input type="text" name="division_no" class="form-control"
-value="{{ row.get('division_no','') }}">
-</div>
-
-<div class="col-md-4">
 <label>Ward Number</label>
 <input type="text" name="ward_no" class="form-control"
 value="{{ row['ward_no'] }}">
 </div>
 
 <div class="col-md-4">
-<label>Ward Attender</label>
-<input type="text" name="ward_attender" class="form-control"
-value="{{ row.get('ward_attender','') }}">
+<label>Ward Representative</label>
+<input type="text" name="ward_representative" class="form-control"
+value="{{ row['ward_representative'] }}">
 </div>
 
 </div>
