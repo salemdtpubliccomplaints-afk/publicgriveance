@@ -204,19 +204,19 @@ def search():
     conn = get_db()
 
     complaints = conn.execute(
-        """
-        SELECT *
-        FROM complaints
-        WHERE complaint_no LIKE ?
-        OR citizen_name LIKE ?
-        OR mobile LIKE ?
-        """,
-        (
-            f'%{keyword}%',
-            f'%{keyword}%',
-            f'%{keyword}%'
-        )
-    ).fetchall()
+    """
+    SELECT *
+    FROM complaints
+    WHERE petitioner_name LIKE ?
+    OR mobile LIKE ?
+    OR ward_no LIKE ?
+    """,
+    (
+        f'%{keyword}%',
+        f'%{keyword}%',
+        f'%{keyword}%'
+    )
+).fetchall()
 
     conn.close()
 
@@ -265,7 +265,6 @@ def add():
         return redirect('/login_page')
 
     return render_template("add_complaint.html")
-    return render_template("add_complaint.html")
 
 
 # ---------------------------
@@ -291,7 +290,7 @@ def save():
     inital_action_status = request.form["inital_action_status"]
     progress_update_status = request.form["progress_update_status"]
     final_resolution_status = request.form["final_resolution_status"]
-    remarks_notes = request.form[" remarks_notes"]
+    remarks_notes = request.form["remarks_notes"]
 
 
     conn = get_db()
@@ -316,9 +315,10 @@ def save():
         inital_action_status,
         progress_update_status,
         final_resolution_status,
-        remarks_notes
+        remarks_notes,
+        status
         )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
         complaint_attender,
@@ -354,6 +354,9 @@ def save():
 
 @app.route('/edit/<int:id>')
 def edit(id):
+
+    if 'user' not in session:
+        return redirect('/login_page')
 
     conn = get_db()
 
@@ -439,7 +442,7 @@ def update(id):
 
 @app.route('/resolve/<int:id>')
 def resolve(id):
-
+    
     conn = get_db()
 
     conn.execute(
@@ -463,7 +466,7 @@ def resolve(id):
 
 @app.route('/delete/<int:id>')
 def delete(id):
-
+   
     conn = get_db()
 
     conn.execute(
