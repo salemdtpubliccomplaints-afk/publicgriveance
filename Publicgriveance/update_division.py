@@ -15,7 +15,7 @@ columns = [
     "inital_action_status TEXT",
     "progress_update_status TEXT",
     "final_resolution_status TEXT",
-    "remarks_&_notes TEXT",
+    "remarks_and_notes TEXT",
     "petitioner_address TEXT"
     
 ]

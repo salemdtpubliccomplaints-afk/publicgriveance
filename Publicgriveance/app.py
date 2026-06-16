@@ -65,7 +65,7 @@ def initialize_database():
         inital_action_status TEXT,
         progress_update_status TEXT,
         final_resolution_status TEXT,
-        remarks_&_notes TEXT
+        remarks_and_notes TEXT
     )
     """)
 
@@ -291,7 +291,7 @@ def save():
     inital_action_status = request.form["inital_action_status"]
     progress_update_status = request.form["progress_update_status"]
     final_resolution_status = request.form["final_resolution_status"]
-    remarks_&_notes = request.form[" remarks_&_notes"]
+    remarks_&_notes = request.form[" remarks_and_notes"]
 
 
     conn = get_db()
@@ -316,9 +316,9 @@ def save():
         inital_action_status,
         progress_update_status,
         final_resolution_status,
-        remarks_&_notes
+        remarks_and_notes
         )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
         complaint_attender,
@@ -402,7 +402,7 @@ def update(id):
         inital_action_status=?,
         progress_update_status=?,
         final_resolution_status=?,
-        remarks_&_notes=?
+        remarks_and_notes=?
         WHERE id=?
         """,
         (
@@ -422,7 +422,7 @@ def update(id):
             request.form['inital_action_status'],
             request.form['progress_update_status'],
             request.form['final_resolution_status'],
-            request.form['remarks_&_notes'],
+            request.form['remarks_and_notes'],
             id
         )
     )
