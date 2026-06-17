@@ -104,7 +104,7 @@ def initialize_database():
 
     cursor.execute("""
     INSERT OR IGNORE INTO users(username, password, role)
-    VALUES('staff1', 'staff123', 'User')
+    VALUES('warriors', 'warriors@2026', 'User')
     """)
 
     cursor.execute("""
@@ -116,7 +116,7 @@ def initialize_database():
     cursor.execute("""
     UPDATE users
     SET role='User'
-    WHERE username='staff1'
+    WHERE username='warriors'
     """)
 
     conn.commit()
