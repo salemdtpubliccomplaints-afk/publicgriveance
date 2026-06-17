@@ -13,7 +13,6 @@ DB_FILE = "grievance.db"
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
@@ -72,7 +71,6 @@ def initialize_database():
     )
     """)
 
-    # Add missing columns safely for existing databases
     required_columns = {
         "complaint_attender": "TEXT",
         "complaint_date": "TEXT",
@@ -104,6 +102,23 @@ def initialize_database():
     VALUES('admin', 'admin123', 'Admin')
     """)
 
+    cursor.execute("""
+    INSERT OR IGNORE INTO users(username, password, role)
+    VALUES('staff1', 'staff123', 'User')
+    """)
+
+    cursor.execute("""
+    UPDATE users
+    SET role='Admin'
+    WHERE username='admin'
+    """)
+
+    cursor.execute("""
+    UPDATE users
+    SET role='User'
+    WHERE username='staff1'
+    """)
+
     conn.commit()
     conn.close()
 
@@ -119,6 +134,10 @@ def save_uploaded_file(file_object, prefix):
     file_object.save(save_path)
 
     return "uploads/" + filename
+
+
+def is_admin():
+    return session.get("role") == "Admin"
 
 
 initialize_database()
@@ -149,7 +168,9 @@ def login():
     conn.close()
 
     if user:
-        session["user"] = username
+        session.clear()
+        session["user"] = user["username"]
+        session["role"] = user["role"]
         return redirect("/")
 
     return "Invalid Login"
@@ -172,10 +193,7 @@ def home():
 
     conn.close()
 
-    return render_template(
-        "complaints.html",
-        complaints=complaints
-    )
+    return render_template("complaints.html", complaints=complaints)
 
 
 @app.route("/dashboard")
@@ -185,9 +203,7 @@ def dashboard():
 
     conn = get_db()
 
-    total = conn.execute(
-        "SELECT COUNT(*) FROM complaints"
-    ).fetchone()[0]
+    total = conn.execute("SELECT COUNT(*) FROM complaints").fetchone()[0]
 
     resolved = conn.execute(
         """
@@ -240,10 +256,7 @@ def search():
 
     conn.close()
 
-    return render_template(
-        "complaints.html",
-        complaints=complaints
-    )
+    return render_template("complaints.html", complaints=complaints)
 
 
 @app.route("/add")
@@ -264,10 +277,23 @@ def save():
         "before"
     )
 
-    after_photo_path = save_uploaded_file(
-        request.files.get("after_photo"),
-        "after"
-    )
+    after_photo_path = ""
+    informed_to_department = ""
+    inital_action_status = ""
+    progress_update_status = ""
+    final_resolution_status = ""
+    remarks_and_notes = ""
+
+    if is_admin():
+        after_photo_path = save_uploaded_file(
+            request.files.get("after_photo"),
+            "after"
+        )
+        informed_to_department = request.form.get("informed_to_department", "")
+        inital_action_status = request.form.get("inital_action_status", "")
+        progress_update_status = request.form.get("progress_update_status", "")
+        final_resolution_status = request.form.get("final_resolution_status", "")
+        remarks_and_notes = request.form.get("remarks_and_notes", "")
 
     conn = get_db()
 
@@ -311,11 +337,11 @@ def save():
             request.form.get("ward_notification_status", ""),
             request.form.get("ward_representative", ""),
             request.form.get("response_details", ""),
-            request.form.get("informed_to_department", ""),
-            request.form.get("inital_action_status", ""),
-            request.form.get("progress_update_status", ""),
-            request.form.get("final_resolution_status", ""),
-            request.form.get("remarks_and_notes", ""),
+            informed_to_department,
+            inital_action_status,
+            progress_update_status,
+            final_resolution_status,
+            remarks_and_notes,
             before_photo_path,
             after_photo_path,
             "Open"
@@ -346,10 +372,7 @@ def edit(id):
 
     conn.close()
 
-    return render_template(
-        "edit_complaint.html",
-        row=row
-    )
+    return render_template("edit_complaint.html", row=row)
 
 
 @app.route("/update/<int:id>", methods=["POST"])
@@ -376,65 +399,104 @@ def update(id):
         "before"
     )
 
-    new_after_photo = save_uploaded_file(
-        request.files.get("after_photo"),
-        "after"
-    )
-
     if new_before_photo:
         before_photo_path = new_before_photo
 
-    if new_after_photo:
-        after_photo_path = new_after_photo
-
-    conn.execute(
-        """
-        UPDATE complaints
-        SET
-            complaint_attender=?,
-            complaint_date=?,
-            zonal_office=?,
-            petitioner_name=?,
-            mobile=?,
-            petitioner_address=?,
-            ward_no=?,
-            category=?,
-            description=?,
-            ward_notification_status=?,
-            ward_representative=?,
-            response_details=?,
-            informed_to_department=?,
-            inital_action_status=?,
-            progress_update_status=?,
-            final_resolution_status=?,
-            remarks_and_notes=?,
-            before_photo=?,
-            after_photo=?
-        WHERE id=?
-        """,
-        (
-            request.form.get("complaint_attender", ""),
-            request.form.get("complaint_date", ""),
-            request.form.get("zonal_office", ""),
-            request.form.get("petitioner_name", ""),
-            request.form.get("mobile", ""),
-            request.form.get("petitioner_address", ""),
-            request.form.get("ward_no", ""),
-            request.form.get("category", ""),
-            request.form.get("description", ""),
-            request.form.get("ward_notification_status", ""),
-            request.form.get("ward_representative", ""),
-            request.form.get("response_details", ""),
-            request.form.get("informed_to_department", ""),
-            request.form.get("inital_action_status", ""),
-            request.form.get("progress_update_status", ""),
-            request.form.get("final_resolution_status", ""),
-            request.form.get("remarks_and_notes", ""),
-            before_photo_path,
-            after_photo_path,
-            id
+    if is_admin():
+        new_after_photo = save_uploaded_file(
+            request.files.get("after_photo"),
+            "after"
         )
-    )
+
+        if new_after_photo:
+            after_photo_path = new_after_photo
+
+        conn.execute(
+            """
+            UPDATE complaints
+            SET
+                complaint_attender=?,
+                complaint_date=?,
+                zonal_office=?,
+                petitioner_name=?,
+                mobile=?,
+                petitioner_address=?,
+                ward_no=?,
+                category=?,
+                description=?,
+                ward_notification_status=?,
+                ward_representative=?,
+                response_details=?,
+                informed_to_department=?,
+                inital_action_status=?,
+                progress_update_status=?,
+                final_resolution_status=?,
+                remarks_and_notes=?,
+                before_photo=?,
+                after_photo=?
+            WHERE id=?
+            """,
+            (
+                request.form.get("complaint_attender", ""),
+                request.form.get("complaint_date", ""),
+                request.form.get("zonal_office", ""),
+                request.form.get("petitioner_name", ""),
+                request.form.get("mobile", ""),
+                request.form.get("petitioner_address", ""),
+                request.form.get("ward_no", ""),
+                request.form.get("category", ""),
+                request.form.get("description", ""),
+                request.form.get("ward_notification_status", ""),
+                request.form.get("ward_representative", ""),
+                request.form.get("response_details", ""),
+                request.form.get("informed_to_department", ""),
+                request.form.get("inital_action_status", ""),
+                request.form.get("progress_update_status", ""),
+                request.form.get("final_resolution_status", ""),
+                request.form.get("remarks_and_notes", ""),
+                before_photo_path,
+                after_photo_path,
+                id
+            )
+        )
+
+    else:
+        conn.execute(
+            """
+            UPDATE complaints
+            SET
+                complaint_attender=?,
+                complaint_date=?,
+                zonal_office=?,
+                petitioner_name=?,
+                mobile=?,
+                petitioner_address=?,
+                ward_no=?,
+                category=?,
+                description=?,
+                ward_notification_status=?,
+                ward_representative=?,
+                response_details=?,
+                before_photo=?
+            WHERE id=?
+            """,
+            (
+                request.form.get("complaint_attender", ""),
+                request.form.get("complaint_date", ""),
+                request.form.get("zonal_office", ""),
+                request.form.get("petitioner_name", ""),
+                request.form.get("mobile", ""),
+                request.form.get("petitioner_address", ""),
+                request.form.get("ward_no", ""),
+                request.form.get("category", ""),
+                request.form.get("description", ""),
+                request.form.get("ward_notification_status", ""),
+                request.form.get("ward_representative", ""),
+                request.form.get("response_details", ""),
+                before_photo_path,
+                id
+            )
+        )
 
     conn.commit()
     conn.close()
@@ -446,6 +508,9 @@ def update(id):
 def resolve(id):
     if "user" not in session:
         return redirect("/login_page")
+
+    if not is_admin():
+        return redirect("/")
 
     conn = get_db()
 
@@ -470,6 +535,9 @@ def delete(id):
     if "user" not in session:
         return redirect("/login_page")
 
+    if not is_admin():
+        return redirect("/")
+
     conn = get_db()
 
     conn.execute(
@@ -493,35 +561,56 @@ def export():
 
     conn = get_db()
 
-    query = """
-    SELECT
-        id AS 'ID',
-        complaint_attender AS 'Complaint Attender',
-        complaint_date AS 'Complaint Date',
-        zonal_office AS 'Zonal Office',
-        petitioner_name AS 'Petitioner Name',
-        mobile AS 'Mobile',
-        petitioner_address AS 'Petitioner Address',
-        ward_no AS 'Ward No',
-        category AS 'Category',
-        description AS 'Description',
-        ward_notification_status AS 'Ward Notification Status',
-        ward_representative AS 'Ward Representative',
-        response_details AS 'Response Details',
-        informed_to_department AS 'Informed To Department',
-        inital_action_status AS 'Initial Action Status',
-        progress_update_status AS 'Progress Update Status',
-        final_resolution_status AS 'Final Resolution Status',
-        remarks_and_notes AS 'Remarks And Notes',
-        before_photo AS 'Before Action Photo',
-        after_photo AS 'After Resolution Photo',
-        status AS 'Status'
-    FROM complaints
-    ORDER BY id DESC
-    """
+    if is_admin():
+        query = """
+        SELECT
+            id AS 'ID',
+            complaint_attender AS 'Complaint Attender',
+            complaint_date AS 'Complaint Date',
+            zonal_office AS 'Zonal Office',
+            petitioner_name AS 'Petitioner Name',
+            mobile AS 'Mobile',
+            petitioner_address AS 'Petitioner Address',
+            ward_no AS 'Ward No',
+            category AS 'Category',
+            description AS 'Description',
+            ward_notification_status AS 'Ward Notification Status',
+            ward_representative AS 'Ward Representative',
+            response_details AS 'Response Details',
+            before_photo AS 'Before Action Photo',
+            informed_to_department AS 'Informed To Department',
+            inital_action_status AS 'Initial Action Status',
+            progress_update_status AS 'Progress Update Status',
+            final_resolution_status AS 'Final Resolution Status',
+            after_photo AS 'After Resolution Photo',
+            remarks_and_notes AS 'Remarks And Notes',
+            status AS 'Status'
+        FROM complaints
+        ORDER BY id DESC
+        """
+    else:
+        query = """
+        SELECT
+            id AS 'ID',
+            complaint_attender AS 'Complaint Attender',
+            complaint_date AS 'Complaint Date',
+            zonal_office AS 'Zonal Office',
+            petitioner_name AS 'Petitioner Name',
+            mobile AS 'Mobile',
+            petitioner_address AS 'Petitioner Address',
+            ward_no AS 'Ward No',
+            category AS 'Category',
+            description AS 'Description',
+            ward_notification_status AS 'Ward Notification Status',
+            ward_representative AS 'Ward Representative',
+            response_details AS 'Response Details',
+            before_photo AS 'Before Action Photo',
+            status AS 'Status'
+        FROM complaints
+        ORDER BY id DESC
+        """
 
     df = pd.read_sql_query(query, conn)
-
     conn.close()
 
     output = io.BytesIO()

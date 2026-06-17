@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>Public Grievance System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
         body { background: #f5f5f5; }
-
         .header-section {
             background: linear-gradient(135deg, #7a0019, #a50021, #ffcc00);
             color: white;
@@ -17,9 +15,7 @@
             display: flex;
             align-items: center;
         }
-
         .logo { max-height: 150px; width: auto; }
-
         .header-title {
             font-size: 26px;
             font-weight: 800;
@@ -27,81 +23,92 @@
             text-align: center;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.45);
         }
-
         .header-subtitle {
             font-size: 15px;
             color: #fff8dc;
             text-align: center;
             margin-top: 6px;
         }
-
-        .dashboard-card {
+        .page-card, .dashboard-card, .search-box, .table-container {
             background: white;
             border-radius: 14px;
-            padding: 16px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.13);
         }
-
-        .dashboard-title {
-            font-size: 26px;
-            font-weight: 700;
+        .page-card { padding: 22px; }
+        .dashboard-card, .search-box, .table-container { padding: 14px; }
+        .page-title, .dashboard-title {
             color: #7a0019;
+            font-weight: 800;
         }
-
-        .search-box {
+        .section-card {
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+            margin-bottom: 20px;
+        }
+        .section-card .card-header {
+            font-weight: 700;
+            font-size: 16px;
+            border-radius: 14px 14px 0 0;
+        }
+        label { font-weight: 600; margin-bottom: 6px; }
+        .form-control { border-radius: 10px; }
+        textarea { resize: vertical; }
+        .btn {
+            border-radius: 10px;
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+        .btn-theme {
+            background: #7a0019;
+            color: white;
+            border: none;
+        }
+        .btn-theme:hover {
+            background: #5c0013;
+            color: white;
+        }
+        .form-actions {
+            position: sticky;
+            bottom: 0;
             background: white;
             padding: 14px;
             border-radius: 14px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.13);
+            box-shadow: 0 -3px 10px rgba(0,0,0,0.10);
+            z-index: 10;
         }
-
-        .table-container {
-            overflow-x: auto;
-            background: white;
-            padding: 12px;
-            border-radius: 14px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.13);
-            max-height: 65vh;
-        }
-
         table {
             white-space: nowrap;
             font-size: 13px;
             margin-bottom: 0;
         }
-
+        .table-container {
+            overflow-x: auto;
+            max-height: 65vh;
+        }
         thead th {
             position: sticky;
             top: 0;
             background: #7a0019 !important;
             color: white !important;
             z-index: 100;
-            vertical-align: middle;
             text-align: center;
+            vertical-align: middle;
         }
-
         tbody td { vertical-align: middle; }
         .table-hover tbody tr:hover { background: #fff6d6; }
-
-        .btn-primary {
-            background: #7a0019;
-            border: none;
-        }
-
-        .btn-primary:hover { background: #5c0013; }
-        .btn-warning { color: black; }
         .action-btn { min-width: 70px; margin-bottom: 4px; }
+        .photo-link { display: inline-block; margin-top: 8px; font-weight: 600; }
 
         @media (max-width: 768px) {
             .header-section { text-align: center; padding: 12px; }
             .logo { max-height: 95px; margin-bottom: 8px; }
             .header-title { font-size: 21px; }
             .header-subtitle { font-size: 13px; }
-            .dashboard-title { font-size: 22px; }
         }
     </style>
-</head>
 
+</head>
 <body>
 
 <div class="container-fluid header-section">
@@ -109,27 +116,27 @@
         <div class="col-md-3 text-center">
             <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo">
         </div>
-
         <div class="col-md-6 text-center">
             <div class="header-title">
                 சேலம் தெற்கு (090) சட்ட மன்றத் தொகுதி - மக்கள் கோரிக்கைகள்
             </div>
-
             <div class="header-subtitle">
                 Public Complaint Monitoring & Tracking System
             </div>
         </div>
-
-        <div class="col-md-3"></div>
+        <div class="col-md-3 text-center">
+            <span class="badge bg-light text-dark">
+                {{ session.get('role', '') }}
+            </span>
+        </div>
     </div>
 </div>
+
 
 <div class="container-fluid mt-3">
 
     <div class="dashboard-card mb-3">
-        <h2 class="dashboard-title text-center mb-3">
-            Public Grievance Dashboard
-        </h2>
+        <h2 class="dashboard-title text-center mb-3">Public Grievance Dashboard</h2>
 
         <div class="text-center">
             <a href="/add" class="btn btn-primary btn-sm">➕ Add Complaint</a>
@@ -143,16 +150,11 @@
         <form action="/search">
             <div class="row g-2 align-items-center">
                 <div class="col-md-6">
-                    <input
-                        class="form-control"
-                        name="keyword"
-                        placeholder="Search by Petitioner Name / Mobile / Ward No / Category / Zonal Office">
+                    <input class="form-control" name="keyword" placeholder="Search by Petitioner Name / Mobile / Ward No / Category / Zonal Office">
                 </div>
-
                 <div class="col-md-2">
                     <button class="btn btn-info w-100">🔍 Search</button>
                 </div>
-
                 <div class="col-md-2">
                     <a href="/" class="btn btn-secondary w-100">Reset</a>
                 </div>
@@ -162,7 +164,6 @@
 
     <div class="table-container">
         <table class="table table-bordered table-hover table-sm">
-
             <thead>
                 <tr>
                     <th>ID</th>
@@ -179,12 +180,16 @@
                     <th>Representative</th>
                     <th>Response</th>
                     <th>Before Photo</th>
+
+                    {% if session.get('role') == 'Admin' %}
                     <th>Department</th>
                     <th>Initial Action</th>
                     <th>Progress</th>
                     <th>Final Resolution</th>
                     <th>After Photo</th>
                     <th>Remarks</th>
+                    {% endif %}
+
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -215,11 +220,11 @@
                         {% endif %}
                     </td>
 
+                    {% if session.get('role') == 'Admin' %}
                     <td>{{ row.informed_to_department }}</td>
                     <td>{{ row.inital_action_status }}</td>
                     <td>{{ row.progress_update_status }}</td>
                     <td>{{ row.final_resolution_status }}</td>
-
                     <td>
                         {% if row.after_photo %}
                         <a href="{{ url_for('static', filename=row.after_photo) }}" target="_blank">View</a>
@@ -227,26 +232,24 @@
                         No Photo
                         {% endif %}
                     </td>
-
                     <td>{{ row.remarks_and_notes }}</td>
+                    {% endif %}
+
                     <td>{{ row.status }}</td>
 
                     <td>
-                        <a href="/resolve/{{ row.id }}" class="btn btn-success btn-sm action-btn">Resolve</a>
                         <a href="/edit/{{ row.id }}" class="btn btn-warning btn-sm action-btn">Edit</a>
-                        <a href="/delete/{{ row.id }}"
-                           class="btn btn-danger btn-sm action-btn"
-                           onclick="return confirm('Delete this complaint?')">
-                            Delete
-                        </a>
+
+                        {% if session.get('role') == 'Admin' %}
+                        <a href="/resolve/{{ row.id }}" class="btn btn-success btn-sm action-btn">Resolve</a>
+                        <a href="/delete/{{ row.id }}" class="btn btn-danger btn-sm action-btn" onclick="return confirm('Delete this complaint?')">Delete</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
-
         </table>
     </div>
 </div>
-
 </body>
 </html>
