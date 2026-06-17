@@ -1,41 +1,40 @@
 import os
+import io
 import sqlite3
 import pandas as pd
 
-from flask import Flask
-from flask import render_template
-from flask import request
-from flask import redirect
-from flask import session
-
-
-import sqlite3
-import pandas as pd
+from flask import Flask, render_template, request, redirect, session, send_file
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-
 app.secret_key = "grievance_secret"
 
 DB_FILE = "grievance.db"
+UPLOAD_FOLDER = os.path.join("static", "uploads")
 
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 def get_db():
-
-    conn = sqlite3.connect(
-        DB_FILE,
-        check_same_thread=False
-    )
-
+    conn = sqlite3.connect(DB_FILE, check_same_thread=False)
     conn.row_factory = sqlite3.Row
-
     return conn
 
 
+def ensure_column(cursor, table_name, column_name, column_type):
+    cursor.execute(f"PRAGMA table_info({table_name})")
+    existing_columns = [row[1] for row in cursor.fetchall()]
+
+    if column_name not in existing_columns:
+        cursor.execute(
+            f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"
+        )
+
+
 def initialize_database():
-
     conn = sqlite3.connect(DB_FILE)
-
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -66,114 +65,100 @@ def initialize_database():
         inital_action_status TEXT,
         progress_update_status TEXT,
         final_resolution_status TEXT,
-        remarks_notes TEXT
+        remarks_and_notes TEXT,
+        before_photo TEXT,
+        after_photo TEXT,
+        status TEXT DEFAULT 'Open'
     )
     """)
 
+    # Add missing columns safely for existing databases
+    required_columns = {
+        "complaint_attender": "TEXT",
+        "complaint_date": "TEXT",
+        "zonal_office": "TEXT",
+        "petitioner_name": "TEXT",
+        "mobile": "TEXT",
+        "petitioner_address": "TEXT",
+        "ward_no": "TEXT",
+        "category": "TEXT",
+        "description": "TEXT",
+        "ward_notification_status": "TEXT",
+        "ward_representative": "TEXT",
+        "response_details": "TEXT",
+        "informed_to_department": "TEXT",
+        "inital_action_status": "TEXT",
+        "progress_update_status": "TEXT",
+        "final_resolution_status": "TEXT",
+        "remarks_and_notes": "TEXT",
+        "before_photo": "TEXT",
+        "after_photo": "TEXT",
+        "status": "TEXT DEFAULT 'Open'"
+    }
+
+    for column_name, column_type in required_columns.items():
+        ensure_column(cursor, "complaints", column_name, column_type)
+
     cursor.execute("""
-    INSERT OR IGNORE INTO users
-    (
-        username,
-        password,
-        role
-    )
-    VALUES
-    (
-        'admin',
-        'admin123',
-        'Admin'
-    )
+    INSERT OR IGNORE INTO users(username, password, role)
+    VALUES('admin', 'admin123', 'Admin')
     """)
 
     conn.commit()
-
     conn.close()
+
+
+def save_uploaded_file(file_object, prefix):
+    if not file_object or not file_object.filename:
+        return ""
+
+    filename = secure_filename(file_object.filename)
+    filename = f"{prefix}_{filename}"
+
+    save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    file_object.save(save_path)
+
+    return "uploads/" + filename
 
 
 initialize_database()
 
 
-# ---------------------------
-# LOGIN
-# ---------------------------
-
-@app.route('/login_page')
+@app.route("/login_page")
 def login_page():
-    return render_template('login.html')
+    return render_template("login.html")
 
 
-@app.route('/login', methods=['POST'])
+@app.route("/login", methods=["POST"])
 def login():
-
-    username = request.form['username']
-    password = request.form['password']
+    username = request.form.get("username", "")
+    password = request.form.get("password", "")
 
     conn = get_db()
 
     user = conn.execute(
-        '''
+        """
         SELECT *
         FROM users
         WHERE username=?
         AND password=?
-        ''',
+        """,
         (username, password)
     ).fetchone()
 
     conn.close()
 
     if user:
-        session['user'] = username
-        return redirect('/')
+        session["user"] = username
+        return redirect("/")
 
     return "Invalid Login"
 
 
-# ---------------------------
-# DASHBOARD
-# ---------------------------
-
-@app.route('/dashboard')
-def dashboard():
-
-    if 'user' not in session:
-        return redirect('/login_page')
-
-    conn = get_db()
-
-    total = conn.execute(
-        "SELECT COUNT(*) FROM complaints"
-    ).fetchone()[0]
-
-    resolved = conn.execute(
-        """
-        SELECT COUNT(*)
-        FROM complaints
-        WHERE status='Resolved'
-        """
-    ).fetchone()[0]
-
-    open_count = total - resolved
-
-    conn.close()
-
-    return render_template(
-        'dashboard.html',
-        total=total,
-        resolved=resolved,
-        open_count=open_count
-    )
-
-
-# ---------------------------
-# HOME PAGE
-# ---------------------------
-
 @app.route("/")
 def home():
-
-    if 'user' not in session:
-        return redirect('/login_page')
+    if "user" not in session:
+        return redirect("/login_page")
 
     conn = get_db()
 
@@ -193,48 +178,44 @@ def home():
     )
 
 
-# ---------------------------
-# SEARCH
-# ---------------------------
-
-@app.route('/search')
-def search():
-
-    keyword = request.args.get('keyword')
+@app.route("/dashboard")
+def dashboard():
+    if "user" not in session:
+        return redirect("/login_page")
 
     conn = get_db()
 
-    complaints = conn.execute(
-    """
-    SELECT *
-    FROM complaints
-    WHERE petitioner_name LIKE ?
-    OR mobile LIKE ?
-    OR ward_no LIKE ?
-    """,
-    (
-        f'%{keyword}%',
-        f'%{keyword}%',
-        f'%{keyword}%'
-    )
-).fetchall()
+    total = conn.execute(
+        "SELECT COUNT(*) FROM complaints"
+    ).fetchone()[0]
+
+    resolved = conn.execute(
+        """
+        SELECT COUNT(*)
+        FROM complaints
+        WHERE status='Resolved'
+        OR final_resolution_status='Resolved'
+        """
+    ).fetchone()[0]
+
+    open_count = total - resolved
 
     conn.close()
 
     return render_template(
-        'complaints.html',
-        complaints=complaints
+        "dashboard.html",
+        total=total,
+        resolved=resolved,
+        open_count=open_count
     )
 
 
-# ---------------------------
-# FILTER BY WARD
-# ---------------------------
+@app.route("/search")
+def search():
+    if "user" not in session:
+        return redirect("/login_page")
 
-@app.route('/filter')
-def filter_ward():
-
-    ward = request.args.get('ward')
+    keyword = request.args.get("keyword", "")
 
     conn = get_db()
 
@@ -242,121 +223,115 @@ def filter_ward():
         """
         SELECT *
         FROM complaints
-        WHERE ward_no=?
+        WHERE petitioner_name LIKE ?
+        OR mobile LIKE ?
+        OR ward_no LIKE ?
+        OR category LIKE ?
+        OR zonal_office LIKE ?
         """,
-        (ward,)
+        (
+            f"%{keyword}%",
+            f"%{keyword}%",
+            f"%{keyword}%",
+            f"%{keyword}%",
+            f"%{keyword}%"
+        )
     ).fetchall()
 
     conn.close()
 
     return render_template(
-        'complaints.html',
+        "complaints.html",
         complaints=complaints
     )
 
 
-# ---------------------------
-# ADD COMPLAINT PAGE
-# ---------------------------
-
 @app.route("/add")
 def add():
-
-    if 'user' not in session:
-        return redirect('/login_page')
+    if "user" not in session:
+        return redirect("/login_page")
 
     return render_template("add_complaint.html")
 
 
-# ---------------------------
-# SAVE COMPLAINT
-# ---------------------------
-
 @app.route("/save", methods=["POST"])
 def save():
+    if "user" not in session:
+        return redirect("/login_page")
 
-  complaint_attender = request.form.get("complaint_attender", "")
-  complaint_date = request.form.get("complaint_date", "")
-  zonal_office = request.form.get("zonal_office", "")
-  petitioner_name = request.form.get("petitioner_name", "")
-  mobile = request.form.get("mobile", "")
-  petitioner_address = request.form.get("petitioner_address", "")
-  ward_no = request.form.get("ward_no", "")
-  category = request.form.get("category", "")
-  description = request.form.get("description", "")
-  ward_notification_status = request.form.get("ward_notification_status", "")
-  ward_representative = request.form.get("ward_representative", "")
-  response_details = request.form.get("response_details", "")
-  informed_to_department = request.form.get("informed_to_department", "")
-  inital_action_status = request.form.get("inital_action_status", "")
-  progress_update_status = request.form.get("progress_update_status", "")
-  final_resolution_status = request.form.get("final_resolution_status", "")
-  remarks_and_notes = request.form.get("remarks_notes", "")
+    before_photo_path = save_uploaded_file(
+        request.files.get("before_photo"),
+        "before"
+    )
 
-  conn = get_db()
+    after_photo_path = save_uploaded_file(
+        request.files.get("after_photo"),
+        "after"
+    )
 
-  conn.execute(
+    conn = get_db()
+
+    conn.execute(
         """
         INSERT INTO complaints
         (
-        complaint_attender,
-        complaint_date,
-        zonal_office,
-        petitioner_name,
-        mobile,
-        petitioner_address,
-        ward_no,
-        category,
-        description,
-        ward_notification_status,
-        ward_representative,
-        response_details,
-        informed_to_department,
-        inital_action_status,
-        progress_update_status,
-        final_resolution_status,
-        remarks_and_notes,
-        status
+            complaint_attender,
+            complaint_date,
+            zonal_office,
+            petitioner_name,
+            mobile,
+            petitioner_address,
+            ward_no,
+            category,
+            description,
+            ward_notification_status,
+            ward_representative,
+            response_details,
+            informed_to_department,
+            inital_action_status,
+            progress_update_status,
+            final_resolution_status,
+            remarks_and_notes,
+            before_photo,
+            after_photo,
+            status
         )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
-        complaint_attender,
-        complaint_date,
-        zonal_office,
-        petitioner_name,
-        mobile,
-        petitioner_address,
-        ward_no,
-        category,
-        description,
-        ward_notification_status,
-        ward_representative,
-        response_details,
-        informed_to_department,
-        inital_action_status,
-        progress_update_status,
-        final_resolution_status,
-        remarks_and_notes,
-        "Open"
+            request.form.get("complaint_attender", ""),
+            request.form.get("complaint_date", ""),
+            request.form.get("zonal_office", ""),
+            request.form.get("petitioner_name", ""),
+            request.form.get("mobile", ""),
+            request.form.get("petitioner_address", ""),
+            request.form.get("ward_no", ""),
+            request.form.get("category", ""),
+            request.form.get("description", ""),
+            request.form.get("ward_notification_status", ""),
+            request.form.get("ward_representative", ""),
+            request.form.get("response_details", ""),
+            request.form.get("informed_to_department", ""),
+            request.form.get("inital_action_status", ""),
+            request.form.get("progress_update_status", ""),
+            request.form.get("final_resolution_status", ""),
+            request.form.get("remarks_and_notes", ""),
+            before_photo_path,
+            after_photo_path,
+            "Open"
         )
     )
 
-  conn.commit()
-  conn.close()
+    conn.commit()
+    conn.close()
 
-  return redirect("/")
+    return redirect("/")
 
 
-# ---------------------------
-# EDIT COMPLAINT
-# ---------------------------
-
-@app.route('/edit/<int:id>')
+@app.route("/edit/<int:id>")
 def edit(id):
-
-    if 'user' not in session:
-        return redirect('/login_page')
+    if "user" not in session:
+        return redirect("/login_page")
 
     conn = get_db()
 
@@ -372,60 +347,91 @@ def edit(id):
     conn.close()
 
     return render_template(
-        'edit_complaint.html',
+        "edit_complaint.html",
         row=row
     )
 
 
-# ---------------------------
-# UPDATE COMPLAINT
-# ---------------------------
-
-@app.route('/update/<int:id>', methods=['POST'])
+@app.route("/update/<int:id>", methods=["POST"])
 def update(id):
+    if "user" not in session:
+        return redirect("/login_page")
 
     conn = get_db()
+
+    existing_row = conn.execute(
+        """
+        SELECT before_photo, after_photo
+        FROM complaints
+        WHERE id=?
+        """,
+        (id,)
+    ).fetchone()
+
+    before_photo_path = existing_row["before_photo"] if existing_row else ""
+    after_photo_path = existing_row["after_photo"] if existing_row else ""
+
+    new_before_photo = save_uploaded_file(
+        request.files.get("before_photo"),
+        "before"
+    )
+
+    new_after_photo = save_uploaded_file(
+        request.files.get("after_photo"),
+        "after"
+    )
+
+    if new_before_photo:
+        before_photo_path = new_before_photo
+
+    if new_after_photo:
+        after_photo_path = new_after_photo
 
     conn.execute(
         """
         UPDATE complaints
-        SET  complaint_attender=?,
-        complaint_date=?,
-        zonal_office=?,
-        petitioner_name=?,
-        mobile=?,
-        petitioner_address=?,
-        ward_no=?,
-        category=?,
-        description=?,
-        ward_notification_status=?,
-        ward_representative=?,
-        response_details=?,
-        informed_to_department=?,
-        inital_action_status=?,
-        progress_update_status=?,
-        final_resolution_status=?,
-        remarks_and_notes=?
+        SET
+            complaint_attender=?,
+            complaint_date=?,
+            zonal_office=?,
+            petitioner_name=?,
+            mobile=?,
+            petitioner_address=?,
+            ward_no=?,
+            category=?,
+            description=?,
+            ward_notification_status=?,
+            ward_representative=?,
+            response_details=?,
+            informed_to_department=?,
+            inital_action_status=?,
+            progress_update_status=?,
+            final_resolution_status=?,
+            remarks_and_notes=?,
+            before_photo=?,
+            after_photo=?
         WHERE id=?
         """,
         (
-            request.form['complaint_attender'],
-            request.form['complaint_date'],
-            request.form['zonal_office'],
-            request.form['petitioner_name'],
-            request.form['mobile'],
-            request.form['petitioner_address'],
-            request.form['ward_no'],
-            request.form['category'],
-            request.form['description'],
-            request.form['ward_notification_status'],
-            request.form['ward_representative'],
-            request.form['response_details'],
-            request.form['informed_to_department'],
-            request.form['inital_action_status'],
-            request.form['progress_update_status'],
-            request.form['final_resolution_status'],
-            request.form['remarks_notes'],
+            request.form.get("complaint_attender", ""),
+            request.form.get("complaint_date", ""),
+            request.form.get("zonal_office", ""),
+            request.form.get("petitioner_name", ""),
+            request.form.get("mobile", ""),
+            request.form.get("petitioner_address", ""),
+            request.form.get("ward_no", ""),
+            request.form.get("category", ""),
+            request.form.get("description", ""),
+            request.form.get("ward_notification_status", ""),
+            request.form.get("ward_representative", ""),
+            request.form.get("response_details", ""),
+            request.form.get("informed_to_department", ""),
+            request.form.get("inital_action_status", ""),
+            request.form.get("progress_update_status", ""),
+            request.form.get("final_resolution_status", ""),
+            request.form.get("remarks_and_notes", ""),
+            before_photo_path,
+            after_photo_path,
             id
         )
     )
@@ -433,22 +439,21 @@ def update(id):
     conn.commit()
     conn.close()
 
-    return redirect('/')
+    return redirect("/")
 
 
-# ---------------------------
-# RESOLVE COMPLAINT
-# ---------------------------
-
-@app.route('/resolve/<int:id>')
+@app.route("/resolve/<int:id>")
 def resolve(id):
-    
+    if "user" not in session:
+        return redirect("/login_page")
+
     conn = get_db()
 
     conn.execute(
         """
         UPDATE complaints
-        SET status='Resolved'
+        SET status='Resolved',
+            final_resolution_status='Resolved'
         WHERE id=?
         """,
         (id,)
@@ -457,16 +462,14 @@ def resolve(id):
     conn.commit()
     conn.close()
 
-    return redirect('/')
+    return redirect("/")
 
 
-# ---------------------------
-# DELETE COMPLAINT
-# ---------------------------
-
-@app.route('/delete/<int:id>')
+@app.route("/delete/<int:id>")
 def delete(id):
-   
+    if "user" not in session:
+        return redirect("/login_page")
+
     conn = get_db()
 
     conn.execute(
@@ -480,59 +483,67 @@ def delete(id):
     conn.commit()
     conn.close()
 
-    return redirect('/')
+    return redirect("/")
 
 
-# ---------------------------
-# EXPORT EXCEL
-# ---------------------------
-
-@app.route('/export')
+@app.route("/export")
 def export():
+    if "user" not in session:
+        return redirect("/login_page")
 
     conn = get_db()
 
     query = """
     SELECT
-        id,
-        complaint_attender,
-        complaint_date,
-        zonal_office,
-        petitioner_name,
-        mobile,
-        petitioner_address,
-        ward_no,
-        category,
-        description,
-        ward_notification_status,
-        ward_representative,
-        response_details,
-        informed_to_department,
-        inital_action_status,
-        progress_update_status,
-        final_resolution_status,
-        remarks_and_notes
+        id AS 'ID',
+        complaint_attender AS 'Complaint Attender',
+        complaint_date AS 'Complaint Date',
+        zonal_office AS 'Zonal Office',
+        petitioner_name AS 'Petitioner Name',
+        mobile AS 'Mobile',
+        petitioner_address AS 'Petitioner Address',
+        ward_no AS 'Ward No',
+        category AS 'Category',
+        description AS 'Description',
+        ward_notification_status AS 'Ward Notification Status',
+        ward_representative AS 'Ward Representative',
+        response_details AS 'Response Details',
+        informed_to_department AS 'Informed To Department',
+        inital_action_status AS 'Initial Action Status',
+        progress_update_status AS 'Progress Update Status',
+        final_resolution_status AS 'Final Resolution Status',
+        remarks_and_notes AS 'Remarks And Notes',
+        before_photo AS 'Before Action Photo',
+        after_photo AS 'After Resolution Photo',
+        status AS 'Status'
     FROM complaints
+    ORDER BY id DESC
     """
 
     df = pd.read_sql_query(query, conn)
 
     conn.close()
 
-    df.to_excel("complaints.xlsx", index=False)
+    output = io.BytesIO()
 
-    return "Excel File Generated Successfully"
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Complaints")
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="complaints.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 
-# ---------------------------
-@app.route('/logout')
+@app.route("/logout")
 def logout():
-
     session.clear()
+    return redirect("/login_page")
 
-    return redirect('/login_page')
-# MAIN
-# ---------------------------
 
 if __name__ == "__main__":
     app.run(debug=True)
