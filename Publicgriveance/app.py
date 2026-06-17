@@ -492,17 +492,34 @@ def export():
 
     conn = get_db()
 
-    df = pd.read_sql_query(
-        "SELECT * FROM complaints",
-        conn
-    )
+    query = """
+    SELECT
+        id,
+        complaint_attender,
+        complaint_date,
+        zonal_office,
+        petitioner_name,
+        mobile,
+        petitioner_address,
+        ward_no,
+        category,
+        description,
+        ward_notification_status,
+        ward_representative,
+        response_details,
+        informed_to_department,
+        inital_action_status,
+        progress_update_status,
+        final_resolution_status,
+        remarks_and_notes
+    FROM complaints
+    """
+
+    df = pd.read_sql_query(query, conn)
 
     conn.close()
 
-    df.to_excel(
-        "complaints.xlsx",
-        index=False
-    )
+    df.to_excel("complaints.xlsx", index=False)
 
     return "Excel File Generated Successfully"
 

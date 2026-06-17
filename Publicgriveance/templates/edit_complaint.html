@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
 <head>
 
@@ -7,313 +6,307 @@
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
+<style>
+
+.header-section {
+    background: linear-gradient(135deg, #7a0019, #a50021, #ffcc00);
+    color: white;
+    padding: 20px;
+    min-height: 160px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.30);
+}
+
+.header-logo {
+    max-height: 180px;
+    width: auto;
+}
+
+.header-title {
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.3;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.40);
+}
+
+.header-subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: #fff8dc;
+    margin-top: 8px;
+}
+
+</style>
+
 </head>
 
 <body>
-<div class="container-fluid bg-success text-white shadow p-3">
 
-    <div class="row align-items-center">
+<div class="container-fluid header-section">
+
+    <div class="row align-items-center w-100">
 
         <div class="col-md-2 text-center">
 
             <img
                 src="{{ url_for('static', filename='images/logo.png') }}"
-                width="90">
+                class="header-logo">
 
         </div>
 
-        <div class="col-md-10">
+        <div class="col-md-8 text-center">
 
-            <h2 class="mb-0">
+            <div class="header-title">
                 சேலம் தெற்கு (090) சட்ட மன்றத் தொகுதி - மக்கள் கோரிக்கைகள்
-            </h2>
+            </div>
 
-            <small>
+            <div class="header-subtitle">
                 Public Complaint Monitoring & Tracking System
-            </small>
+            </div>
 
         </div>
+
+        <div class="col-md-2"></div>
 
     </div>
 
 </div>
 
+<div class="container mt-4 mb-5">
+
+    <div class="page-card">
 
-<br>
-
-<div class="container mt-4">
-
-<h2>Edit Complaint</h2>
-
-<a href="/" class="btn btn-secondary mb-3">Back</a>
-
-<form action="/update/{{ row['id'] }}" method="POST">
-
-<div class="card">
-<div class="card-header bg-primary text-white">
-Complaint Information
-</div>
-
-<div class="card-body">
-
-<div class="row">
-
-<div class="col-md-4">
-<label>Complaint Attender</label>
-<input type="text" name="complaint_attender" class="form-control"
-value="{{ row['complaint_attender'] }}">
-</div>
-
-<div class="col-md-4">
-<label>Complaint Date</label>
-<input type="date" name="complaint_date" class="form-control"
-value="{{ row['complaint_date'] }}">
-</div>
-
-<div class="col-md-4">
-<label>Zonal Office</label>
-<input type="text" name="zonal_office" class="form-control"
-value="{{ row['zonal_office'] }}">
-</div>
-
-</div>
-
-<br>
-
-<div class="row">
-
-<div class="col-md-4">
-<label>Ward Number</label>
-<input type="text" name="ward_no" class="form-control"
-value="{{ row['ward_no'] }}">
-</div>
-
-<div class="col-md-4">
-<label>Ward Representative</label>
-<input type="text" name="ward_representative" class="form-control"
-value="{{ row['ward_representative'] }}">
-</div>
-
-</div>
-
-</div>
-</div>
-
-<br>
-
-<div class="card">
-<div class="card-header bg-success text-white">
-Petitioner Information
-</div>
-
-<div class="card-body">
-
-<div class="row">
-
-<div class="col-md-6">
-<label>Petitioner Name</label>
-<input type="text" name="petitioner_name" class="form-control"
-value="{{ row['petitioner_name'] }}">
-</div>
-
-<div class="col-md-6">
-<label>Mobile Number</label>
-<input type="text" name="mobile" class="form-control"
-value="{{ row['mobile'] }}">
-</div>
-
-</div>
-
-<br>
-
-<label>Petitioner Address</label>
-
-<textarea name="petitioner_address"
-class="form-control"
-rows="3">{{ row['petitioner_address'] }}</textarea>
-
-</div>
-</div>
-
-<br>
-
-<div class="card">
-<div class="card-header bg-warning">
-Complaint Details
-</div>
-
-<div class="card-body">
-
-<label>Category</label>
-
-<select name="category" class="form-control">
-
-<option value="New Road" {% if row['category']=="New Road" %}selected{% endif %}>New Road</option>
-
-<option value="Road Patch Work" {% if row['category']=="Road Patch Work" %}selected{% endif %}>Road Patch Work</option>
-
-<option value="Road Corner Safety Wall" {% if row['category']=="Road Corner Safety Wall" %}selected{% endif %}>Road Corner Safety Wall</option>
-
-<option value="New Drainage" {% if row['category']=="New Drainage" %}selected{% endif %}>New Drainage</option>
-
-<option value="Drainage Repair" {% if row['category']=="Drainage Repair" %}selected{% endif %}>Drainage Repair</option>
-
-<option value="Drainage Clean" {% if row['category']=="Drainage Clean" %}selected{% endif %}>Drainage Clean</option>
-
-<option value="Street Light Change" {% if row['category']=="Street Light Change" %}selected{% endif %}>Street Light Change</option>
-
-<option value="Water Late" {% if row['category']=="Water Late" %}selected{% endif %}>Water Late</option>
-
-<option value="Others" {% if row['category']=="Others" %}selected{% endif %}>Others</option>
-
-</select>
-
-<br>
-
-<label>Description</label>
-
-<textarea
-name="description"
-class="form-control"
-rows="4">{{ row['description'] }}</textarea>
-
-</div>
-</div>
-
-<br>
-
-<div class="card">
-<div class="card-header bg-info text-white">
-Department Action
-</div>
-
-<div class="card-body">
-
-<div class="row">
-
-<div class="col-md-4">
-
-<label>Ward Notification Status</label>
-
-<select name="ward_notification_status" class="form-control">
-
-<option value="Pending" {% if row['ward_notification_status']=="Pending" %}selected{% endif %}>Pending</option>
-
-<option value="Informed" {% if row['ward_notification_status']=="Informed" %}selected{% endif %}>Informed</option>
-
-<option value="Completed" {% if row['ward_notification_status']=="Completed" %}selected{% endif %}>Completed</option>
-
-</select>
-
-</div>
-
-<div class="col-md-4">
-<label>Ward Representative</label>
-<input type="text" name="ward_representative" class="form-control"
-value="{{ row['ward_representative'] }}">
-</div>
-
-<div class="col-md-4">
-<label>Informed To Department</label>
-<input type="text" name="informed_to_department" class="form-control"
-value="{{ row['informed_to_department'] }}">
-</div>
-
-</div>
-
-<br>
-
-<div class="row">
-
-<div class="col-md-4">
-
-<label>Initial Action Status</label>
-
-<select name="inital_action_status" class="form-control">
-
-<option value="Pending" {% if row['inital_action_status']=="Pending" %}selected{% endif %}>Pending</option>
-
-<option value="In Progress" {% if row['inital_action_status']=="In Progress" %}selected{% endif %}>In Progress</option>
-
-<option value="Completed" {% if row['inital_action_status']=="Completed" %}selected{% endif %}>Completed</option>
-
-</select>
-
-</div>
-
-<div class="col-md-4">
-
-<label>Progress Update Status</label>
-
-<select name="progress_update_status" class="form-control">
-
-<option value="Pending" {% if row['progress_update_status']=="Pending" %}selected{% endif %}>Pending</option>
-
-<option value="In Progress" {% if row['progress_update_status']=="In Progress" %}selected{% endif %}>In Progress</option>
-
-<option value="Completed" {% if row['progress_update_status']=="Completed" %}selected{% endif %}>Completed</option>
-
-</select>
-
-</div>
-
-<div class="col-md-4">
-
-<label>Final Resolution Status</label>
-
-<select name="final_resolution_status" class="form-control">
-
-<option value="Open" {% if row['final_resolution_status']=="Open" %}selected{% endif %}>Open</option>
-
-<option value="In Progress" {% if row['final_resolution_status']=="In Progress" %}selected{% endif %}>In Progress</option>
-
-<option value="Resolved" {% if row['final_resolution_status']=="Resolved" %}selected{% endif %}>Resolved</option>
-
-<option value="Closed" {% if row['final_resolution_status']=="Closed" %}selected{% endif %}>Closed</option>
-
-</select>
-
-</div>
-
-</div>
-
-<br>
-
-<label>Response Details</label>
-
-<textarea
-name="response_details"
-class="form-control"
-rows="3">{{ row['response_details'] }}</textarea>
-
-<br>
-
-<label>Remarks & Notes</label>
-
-<textarea
-name="remarks_notes"
-class="form-control"
-rows="3">{{ row['remarks_notes'] }}</textarea>
-
-</div>
-</div>
-
-<br>
-
-<button type="submit" class="btn btn-primary">
-Update Complaint
-</button>
-
-<a href="/resolve/{{ row['id'] }}" class="btn btn-success">
-Resolve
-</a>
-
-<a href="/delete/{{ row['id'] }}"
-class="btn btn-danger"
-onclick="return confirm('Delete this complaint?')">
-Delete </a>
-
-</form>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-0">Edit Complaint</h2>
+                <small class="text-muted">Update grievance details and department action status</small>
+            </div>
+
+            <a href="/" class="btn btn-secondary">
+                ← Back
+            </a>
+        </div>
+
+        <form action="/update/{{ row['id'] }}" method="POST">
+
+            <div class="card section-card">
+                <div class="card-header text-white" style="background:#7a0019;">
+                    Complaint Information
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-4">
+                            <label>Complaint Attender</label>
+                            <input type="text" name="complaint_attender" class="form-control"
+                                   value="{{ row['complaint_attender'] }}">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Complaint Date</label>
+                            <input type="date" name="complaint_date" class="form-control"
+                                   value="{{ row['complaint_date'] }}">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Zonal Office</label>
+                            <input type="text" name="zonal_office" class="form-control"
+                                   value="{{ row['zonal_office'] }}">
+                        </div>
+
+                       
+                        <div class="col-md-4">
+                            <label>Ward Number</label>
+                            <input type="text" name="ward_no" class="form-control"
+                                   value="{{ row['ward_no'] }}">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Ward Representative</label>
+                            <input type="text" name="ward_representative" class="form-control"
+                                   value="{{ row['ward_representative'] }}">
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card section-card">
+                <div class="card-header text-white" style="background:#198754;">
+                    Petitioner Information
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label>Petitioner Name</label>
+                            <input type="text" name="petitioner_name" class="form-control"
+                                   value="{{ row['petitioner_name'] }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label>Mobile Number</label>
+                            <input type="text" name="mobile" class="form-control"
+                                   value="{{ row['mobile'] }}">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label>Petitioner Address</label>
+                            <textarea name="petitioner_address" class="form-control" rows="3">{{ row['petitioner_address'] }}</textarea>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card section-card">
+                <div class="card-header" style="background:#ffcc00;">
+                    Complaint Details
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label>Category</label>
+                            <select name="category" class="form-control">
+                                <option value="New Road" {% if row['category']=="New Road" %}selected{% endif %}>New Road</option>
+                                <option value="Road Patch Work" {% if row['category']=="Road Patch Work" %}selected{% endif %}>Road Patch Work</option>
+                                <option value="Road Corner Safety Wall" {% if row['category']=="Road Corner Safety Wall" %}selected{% endif %}>Road Corner Safety Wall</option>
+                                <option value="New Drainage" {% if row['category']=="New Drainage" %}selected{% endif %}>New Drainage</option>
+                                <option value="Drainage Repair" {% if row['category']=="Drainage Repair" %}selected{% endif %}>Drainage Repair</option>
+                                <option value="Drainage Clean" {% if row['category']=="Drainage Clean" %}selected{% endif %}>Drainage Clean</option>
+                                <option value="Drainage Clean Remove" {% if row['category']=="Drainage Clean Remove" %}selected{% endif %}>Drainage Clean Remove</option>
+                                <option value="Garbage Collector Not Coming" {% if row['category']=="Garbage Collector Not Coming" %}selected{% endif %}>Garbage Collector Not Coming</option>
+                                <option value="Arrange Garbage Vehicle" {% if row['category']=="Arrange Garbage Vehicle" %}selected{% endif %}>Arrange Garbage Vehicle</option>
+                                <option value="Street Light Change" {% if row['category']=="Street Light Change" %}selected{% endif %}>Street Light Change</option>
+                                <option value="New Street Connection" {% if row['category']=="New Street Connection" %}selected{% endif %}>New Street Connection</option>
+                                <option value="Water Late" {% if row['category']=="Water Late" %}selected{% endif %}>Water Late</option>
+                                <option value="Water Turbid" {% if row['category']=="Water Turbid" %}selected{% endif %}>Water Turbid</option>
+                                <option value="Common Water Line Leak" {% if row['category']=="Common Water Line Leak" %}selected{% endif %}>Common Water Line Leak</option>
+                                <option value="Ground Motor Repair" {% if row['category']=="Ground Motor Repair" %}selected{% endif %}>Ground Motor Repair</option>
+                                <option value="Ground Motor Not Available" {% if row['category']=="Ground Motor Not Available" %}selected{% endif %}>Ground Motor Not Available</option>
+                                <option value="Ground Tank Damage" {% if row['category']=="Ground Tank Damage" %}selected{% endif %}>Ground Tank Damage</option>
+                                <option value="Ground Tank Tap Change" {% if row['category']=="Ground Tank Tap Change" %}selected{% endif %}>Ground Tank Tap Change</option>
+                                <option value="New Common Water Line" {% if row['category']=="New Common Water Line" %}selected{% endif %}>New Common Water Line</option>
+                                <option value="Street Dog Issue" {% if row['category']=="Street Dog Issue" %}selected{% endif %}>Street Dog Issue</option>
+                                <option value="EB Line Issue" {% if row['category']=="EB Line Issue" %}selected{% endif %}>EB Line Issue</option>
+                                <option value="New EB Connection" {% if row['category']=="New EB Connection" %}selected{% endif %}>New EB Connection</option>
+                                <option value="Power Cut" {% if row['category']=="Power Cut" %}selected{% endif %}>Power Cut</option>
+                                <option value="New EB Line" {% if row['category']=="New EB Line" %}selected{% endif %}>New EB Line</option>
+                                <option value="Others" {% if row['category']=="Others" %}selected{% endif %}>Others</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label>Description</label>
+                            <textarea name="description" class="form-control" rows="4">{{ row['description'] }}</textarea>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card section-card">
+                <div class="card-header text-white" style="background:#0d6efd;">
+                    Department Action
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-4">
+                            <label>Ward Notification Status</label>
+                            <select name="ward_notification_status" class="form-control">
+                                <option value="Pending" {% if row['ward_notification_status']=="Pending" %}selected{% endif %}>Pending</option>
+                                <option value="Informed" {% if row['ward_notification_status']=="Informed" %}selected{% endif %}>Informed</option>
+                                <option value="Completed" {% if row['ward_notification_status']=="Completed" %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Informed To Department</label>
+                            <input type="text" name="informed_to_department" class="form-control"
+                                   value="{{ row['informed_to_department'] }}">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Initial Action Status</label>
+                            <select name="inital_action_status" class="form-control">
+                                <option value="Pending" {% if row['inital_action_status']=="Pending" %}selected{% endif %}>Pending</option>
+                                <option value="In Progress" {% if row['inital_action_status']=="In Progress" %}selected{% endif %}>In Progress</option>
+                                <option value="Completed" {% if row['inital_action_status']=="Completed" %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Progress Update Status</label>
+                            <select name="progress_update_status" class="form-control">
+                                <option value="Pending" {% if row['progress_update_status']=="Pending" %}selected{% endif %}>Pending</option>
+                                <option value="In Progress" {% if row['progress_update_status']=="In Progress" %}selected{% endif %}>In Progress</option>
+                                <option value="Completed" {% if row['progress_update_status']=="Completed" %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Final Resolution Status</label>
+                            <select name="final_resolution_status" class="form-control">
+                                <option value="Open" {% if row['final_resolution_status']=="Open" %}selected{% endif %}>Open</option>
+                                <option value="In Progress" {% if row['final_resolution_status']=="In Progress" %}selected{% endif %}>In Progress</option>
+                                <option value="Resolved" {% if row['final_resolution_status']=="Resolved" %}selected{% endif %}>Resolved</option>
+                                <option value="Closed" {% if row['final_resolution_status']=="Closed" %}selected{% endif %}>Closed</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label>Response Details</label>
+                            <textarea name="response_details" class="form-control" rows="3">{{ row['response_details'] }}</textarea>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label>Remarks & Notes</label>
+                            <textarea name="remarks_and_notes" class="form-control" rows="3">{{ row['remarks_and_notes'] }}</textarea>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="form-actions d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn btn-theme">
+                    Update Complaint
+                </button>
+
+                <a href="/resolve/{{ row['id'] }}" class="btn btn-success">
+                    Resolve
+                </a>
+
+                <a href="/delete/{{ row['id'] }}"
+                   class="btn btn-danger"
+                   onclick="return confirm('Delete this complaint?')">
+                    Delete
+                </a>
+
+                <a href="/" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+
+    </div>
 
 </div>
 
