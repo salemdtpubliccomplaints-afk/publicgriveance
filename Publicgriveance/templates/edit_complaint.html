@@ -5,6 +5,38 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+	.banner-container{
+    width:100%;
+    overflow:hidden;
+    background:#7a0019;
+}
+
+.banner-image{
+    width:100%;
+    max-height:260px;
+    object-fit:cover;
+    display:block;
+}
+
+.title-section{
+    text-align:center;
+    padding:14px 10px;
+    background:white;
+    box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+
+.title-tamil{
+    color:#7a0019;
+    font-weight:800;
+    font-size:32px;
+    line-height:1.3;
+}
+
+.title-english{
+    color:#555;
+    font-size:18px;
+    font-weight:600;
+}
         body { background: #f5f5f5; }
         .header-section {
             background: linear-gradient(135deg, #7a0019, #a50021, #ffcc00);
@@ -110,26 +142,21 @@
 
 </head>
 <body>
+<div class="banner-container">
+    <img
+        src="{{ url_for('static', filename='images/banner.png') }}"
+        class="banner-image"
+        alt="Banner">
+</div>
 
-<div class="container-fluid header-section">
-    <div class="row align-items-center w-100">
-        <div class="col-md-3 text-center">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo">
-        </div>
-        <div class="col-md-6 text-center">
-            <div class="header-title">
-                சேலம் தெற்கு (090) சட்ட மன்றத் தொகுதி - மக்கள் கோரிக்கைகள்
-            </div>
-            <div class="header-subtitle">
-                Public Complaint Monitoring & Tracking System
-            </div>
-        </div>
-        <div class="col-md-3 text-center">
-            <span class="badge bg-light text-dark">
-                {{ session.get('role', '') }}
-            </span>
-        </div>
-    </div>
+<div class="title-section">
+    <h1 class="title-tamil">
+        சேலம் தெற்கு (090) சட்ட மன்றத் தொகுதி - மக்கள் கோரிக்கைகள்
+    </h1>
+
+    <h5 class="title-english">
+        Public Complaint Monitoring & Tracking System
+    </h5>
 </div>
 
 

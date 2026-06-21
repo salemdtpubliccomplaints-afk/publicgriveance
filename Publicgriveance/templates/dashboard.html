@@ -9,34 +9,22 @@
 <div class="container mt-5">
     <h2>Public Grievance Dashboard</h2>
 
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5>Total Complaints</h5>
-                    <h2>{{ total }}</h2>
-                </div>
-            </div>
-        </div>
+    <div class="banner-container">
+    <img
+        src="{{ url_for('static', filename='images/banner.png') }}"
+        class="banner-image"
+        alt="Banner">
+</div>
 
-        <div class="col-md-4">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <h5>Open Complaints</h5>
-                    <h2>{{ open_count }}</h2>
-                </div>
-            </div>
-        </div>
+<div class="title-section">
+    <h1 class="title-tamil">
+        சேலம் தெற்கு (090) சட்ட மன்றத் தொகுதி - மக்கள் கோரிக்கைகள்
+    </h1>
 
-        <div class="col-md-4">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5>Resolved Complaints</h5>
-                    <h2>{{ resolved }}</h2>
-                </div>
-            </div>
-        </div>
-    </div>
+    <h5 class="title-english">
+        Public Complaint Monitoring & Tracking System
+    </h5>
+</div>
 
     <br>
     <a href="/" class="btn btn-secondary">Back</a>
