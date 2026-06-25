@@ -634,5 +634,20 @@ def logout():
     return redirect("/login_page")
 
 
+
+@app.route("/db-test")
+def db_test():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM complaints")
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        return f"Database connected successfully. Complaints count: {count}"
+    except Exception as e:
+        return f"Database error: {str(e)}"
+
+
 if __name__ == "__main__":
     app.run(debug=True)
