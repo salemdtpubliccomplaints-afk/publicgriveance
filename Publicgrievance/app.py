@@ -201,6 +201,14 @@ def dashboard():
     if "user" not in session:
         return redirect("/login_page")
 
+    selected_status = request.args.get("status", "total")
+    keyword = request.args.get("keyword", "").strip()
+    ward = request.args.get("ward", "").strip()
+    category = request.args.get("category", "").strip()
+    zonal_office = request.args.get("zonal_office", "").strip()
+    from_date = request.args.get("from_date", "").strip()
+    to_date = request.args.get("to_date", "").strip()
+
     conn = get_db()
 
     total = conn.execute(
@@ -229,6 +237,109 @@ def dashboard():
            OR status='Resolved'
     """).fetchone()[0]
 
+    where_clauses = []
+    params = []
+
+    if selected_status == "open":
+        where_clauses.append("""
+            (final_resolution_status IS NULL
+             OR final_resolution_status=''
+             OR final_resolution_status='Open')
+        """)
+    elif selected_status == "in_progress":
+        where_clauses.append("final_resolution_status='In Progress'")
+    elif selected_status == "resolved":
+        where_clauses.append("""
+            (final_resolution_status='Resolved'
+             OR final_resolution_status='Closed'
+             OR status='Resolved')
+        """)
+
+    if keyword:
+        where_clauses.append("""
+            (petitioner_name LIKE ?
+             OR mobile LIKE ?
+             OR ward_no LIKE ?
+             OR category LIKE ?
+             OR zonal_office LIKE ?
+             OR description LIKE ?
+             OR response_details LIKE ?
+             OR remarks_and_notes LIKE ?)
+        """)
+        search_value = f"%{keyword}%"
+        params.extend([search_value] * 8)
+
+    if ward:
+        where_clauses.append("ward_no = ?")
+        params.append(ward)
+
+    if category:
+        where_clauses.append("category = ?")
+        params.append(category)
+
+    if zonal_office:
+        where_clauses.append("zonal_office = ?")
+        params.append(zonal_office)
+
+    if from_date:
+        where_clauses.append("complaint_date >= ?")
+        params.append(from_date)
+
+    if to_date:
+        where_clauses.append("complaint_date <= ?")
+        params.append(to_date)
+
+    where_sql = ""
+    if where_clauses:
+        where_sql = "WHERE " + " AND ".join(where_clauses)
+
+    complaints = conn.execute(
+        f"""
+        SELECT
+            id,
+            complaint_date,
+            zonal_office,
+            petitioner_name,
+            mobile,
+            ward_no,
+            category,
+            description,
+            ward_notification_status,
+            ward_representative,
+            response_details,
+            informed_to_department,
+            progress_update_status,
+            final_resolution_status,
+            remarks_and_notes,
+            status
+        FROM complaints
+        {where_sql}
+        ORDER BY id DESC
+        """,
+        params
+    ).fetchall()
+
+    wards = conn.execute("""
+        SELECT DISTINCT ward_no
+        FROM complaints
+        WHERE ward_no IS NOT NULL AND ward_no != ''
+        ORDER BY ward_no
+    """).fetchall()
+
+    zones = conn.execute("""
+        SELECT DISTINCT zonal_office
+        FROM complaints
+        WHERE zonal_office IS NOT NULL AND zonal_office != ''
+        ORDER BY zonal_office
+    """).fetchall()
+
+    categories = conn.execute("""
+        SELECT DISTINCT category
+        FROM complaints
+        WHERE category IS NOT NULL AND category != ''
+        ORDER BY category
+    """).fetchall()
+
     conn.close()
 
     return render_template(
@@ -236,7 +347,18 @@ def dashboard():
         total=total,
         open_count=open_count,
         in_progress=in_progress,
-        resolved=resolved
+        resolved=resolved,
+        complaints=complaints,
+        selected_status=selected_status,
+        keyword=keyword,
+        selected_ward=ward,
+        selected_category=category,
+        selected_zone=zonal_office,
+        from_date=from_date,
+        to_date=to_date,
+        wards=wards,
+        zones=zones,
+        categories=categories
     )
 
 
