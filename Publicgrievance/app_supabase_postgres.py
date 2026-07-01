@@ -1,6 +1,7 @@
 import os
 import io
-import sqlite3
+import psycopg2
+from psycopg2.extras import DictCursor
 import pandas as pd
 
 from flask import Flask, render_template, request, redirect, session, send_file
@@ -9,45 +10,59 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = "grievance_secret"
 
-DB_FILE = "grievance.db"
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
-def get_db():
-    conn = sqlite3.connect(DB_FILE, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    return conn
+class PGConnection:
+    """
+    Small wrapper to keep the existing app code style working.
+    It allows conn.execute(...) like SQLite, but sends queries to PostgreSQL.
+    """
+    def __init__(self):
+        database_url = os.environ.get("DATABASE_URL")
+        if not database_url:
+            raise RuntimeError("DATABASE_URL environment variable is missing")
 
-
-def ensure_column(cursor, table_name, column_name, column_type):
-    cursor.execute(f"PRAGMA table_info({table_name})")
-    existing_columns = [row[1] for row in cursor.fetchall()]
-
-    if column_name not in existing_columns:
-        cursor.execute(
-            f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"
+        self.raw = psycopg2.connect(
+            database_url,
+            cursor_factory=DictCursor
         )
+
+    def execute(self, query, params=None):
+        query = query.replace("?", "%s")
+        cur = self.raw.cursor()
+        cur.execute(query, params or ())
+        return cur
+
+    def commit(self):
+        self.raw.commit()
+
+    def close(self):
+        self.raw.close()
+
+
+def get_db():
+    return PGConnection()
 
 
 def initialize_database():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
+    conn = get_db()
 
-    cursor.execute("""
+    conn.execute("""
     CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         username TEXT UNIQUE,
         password TEXT,
         role TEXT
     )
     """)
 
-    cursor.execute("""
+    conn.execute("""
     CREATE TABLE IF NOT EXISTS complaints(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         complaint_attender TEXT,
         complaint_date TEXT,
         zonal_office TEXT,
@@ -71,49 +86,25 @@ def initialize_database():
     )
     """)
 
-    required_columns = {
-        "complaint_attender": "TEXT",
-        "complaint_date": "TEXT",
-        "zonal_office": "TEXT",
-        "petitioner_name": "TEXT",
-        "mobile": "TEXT",
-        "petitioner_address": "TEXT",
-        "ward_no": "TEXT",
-        "category": "TEXT",
-        "description": "TEXT",
-        "ward_notification_status": "TEXT",
-        "ward_representative": "TEXT",
-        "response_details": "TEXT",
-        "informed_to_department": "TEXT",
-        "inital_action_status": "TEXT",
-        "progress_update_status": "TEXT",
-        "final_resolution_status": "TEXT",
-        "remarks_and_notes": "TEXT",
-        "before_photo": "TEXT",
-        "after_photo": "TEXT",
-        "status": "TEXT DEFAULT 'Open'"
-    }
-
-    for column_name, column_type in required_columns.items():
-        ensure_column(cursor, "complaints", column_name, column_type)
-
-    cursor.execute("""
-    INSERT OR IGNORE INTO users(username, password, role)
+    conn.execute("""
+    INSERT INTO users(username, password, role)
     VALUES('admin', 'admin123', 'Admin')
+    ON CONFLICT (username) DO NOTHING
     """)
 
-    cursor.execute("""
-    INSERT OR IGNORE INTO users(username, password, role)
+    conn.execute("""
+    INSERT INTO users(username, password, role)
     VALUES('warriors', 'warriors@2026', 'User')
+    ON CONFLICT (username) DO NOTHING
     """)
 
-    cursor.execute("""
+    conn.execute("""
     UPDATE users
     SET role='Admin'
     WHERE username='admin'
     """)
 
-    cursor.execute("""
+    conn.execute("""
     UPDATE users
     SET role='User'
     WHERE username='warriors'
@@ -746,7 +737,7 @@ def export():
         ORDER BY id DESC
         """
 
-    df = pd.read_sql_query(query, conn)
+    df = pd.read_sql_query(query, conn.raw)
     conn.close()
 
     output = io.BytesIO()
@@ -762,6 +753,18 @@ def export():
         download_name="complaints.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+
+@app.route("/db-test")
+def db_test():
+    try:
+        conn = get_db()
+        cur = conn.execute("SELECT COUNT(*) FROM complaints")
+        count = cur.fetchone()[0]
+        conn.close()
+        return f"Supabase connected successfully. Complaints count: {count}"
+    except Exception as e:
+        return f"Database error: {str(e)}"
 
 
 @app.route("/logout")
