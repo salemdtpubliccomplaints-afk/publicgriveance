@@ -118,6 +118,11 @@
             .count-number{ font-size:34px; }
         }
     
+
+        .status-open-row{ background:#fff5f5; }
+        .status-progress-row{ background:#fffbea; }
+        .status-resolved-row{ background:#f3fff6; }
+
         .hide-progress-column .progress-column{
             display:none;
         }
@@ -246,14 +251,12 @@
             <table class="table table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Date</th>
                         <th>Ward</th>
-                        <th>Petitioner</th>
-                        <th>Mobile</th>
+                        <th>Zonal Office</th>
                         <th>Category</th>
-                        <th>Final Status</th>
                         <th class="progress-column">Progress</th>
+                        <th>Final Resolution Status</th>
                         <th>Remarks & Comments</th>
                         <th>More Details</th>
                     </tr>
@@ -261,13 +264,12 @@
                 <tbody>
                     {% for row in complaints %}
                     {% set final_status = row['final_resolution_status'] or 'Open' %}
-                    <tr>
-                        <td class="text-center">{{ row['id'] }}</td>
+                    <tr class="{% if final_status == 'In Progress' %}status-progress-row{% elif final_status == 'Resolved' or final_status == 'Closed' %}status-resolved-row{% else %}status-open-row{% endif %}">
                         <td>{{ row['complaint_date'] }}</td>
                         <td class="text-center">{{ row['ward_no'] }}</td>
-                        <td>{{ row['petitioner_name'] }}</td>
-                        <td>{{ row['mobile'] }}</td>
+                        <td>{{ row['zonal_office'] }}</td>
                         <td>{{ row['category'] }}</td>
+                        <td class="progress-column">{{ row['progress_update_status'] or '-' }}</td>
                         <td class="text-center">
                             {% if final_status == 'In Progress' %}
                                 <span class="badge badge-progress">In Progress</span>
@@ -277,8 +279,7 @@
                                 <span class="badge badge-open">Open</span>
                             {% endif %}
                         </td>
-                        <td>{{ row['progress_update_status'] }}</td>
-                        <td class="remarks-cell">{{ row['remarks_and_notes'] }}</td>
+                        <td class="remarks-cell">{{ row['remarks_and_notes'] or 'No remarks added yet.' }}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-primary"
                                     data-bs-toggle="modal"
@@ -292,27 +293,42 @@
                         <div class="modal-dialog modal-lg modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header" style="background:#7a0019;color:white;">
-                                    <h5 class="modal-title">Complaint Details - ID {{ row['id'] }}</h5>
+                                    <h5 class="modal-title">Complaint Full Details</h5>
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
                                     <div class="row g-3">
+                                        <div class="col-md-6"><strong>Complaint Date:</strong> {{ row['complaint_date'] }}</div>
+                                        <div class="col-md-6"><strong>Complaint Attender:</strong> {{ row['complaint_attender'] }}</div>
                                         <div class="col-md-6"><strong>Petitioner:</strong> {{ row['petitioner_name'] }}</div>
                                         <div class="col-md-6"><strong>Mobile:</strong> {{ row['mobile'] }}</div>
+                                        <div class="col-md-12"><strong>Petitioner Address:</strong><br>{{ row['petitioner_address'] }}</div>
                                         <div class="col-md-6"><strong>Ward:</strong> {{ row['ward_no'] }}</div>
                                         <div class="col-md-6"><strong>Zonal Office:</strong> {{ row['zonal_office'] }}</div>
                                         <div class="col-md-6"><strong>Category:</strong> {{ row['category'] }}</div>
-                                        <div class="col-md-6"><strong>Final Status:</strong> {{ final_status }}</div>
+                                        <div class="col-md-6"><strong>Final Resolution Status:</strong> {{ final_status }}</div>
                                         <div class="col-md-12"><strong>Description:</strong><br>{{ row['description'] }}</div>
                                         <div class="col-md-12"><strong>Ward Response:</strong><br>{{ row['response_details'] }}</div>
                                         <div class="col-md-12"><strong>Informed To Department:</strong><br>{{ row['informed_to_department'] }}</div>
-                                        <div class="col-md-12"><strong>Progress Update Status:</strong><br>{{ row['progress_update_status'] }}</div>
+                                        <div class="col-md-12"><strong>Progress Update Status:</strong><br>{{ row['progress_update_status'] or '-' }}</div>
                                         <div class="col-md-12">
                                             <strong>Remarks & Comments:</strong>
                                             <div class="border rounded p-3 mt-2 bg-light">
                                                 {{ row['remarks_and_notes'] or 'No remarks added yet.' }}
                                             </div>
                                         </div>
+                                        {% if row['before_photo'] %}
+                                        <div class="col-md-6">
+                                            <strong>Before Photo:</strong><br>
+                                            <a href="{{ url_for('static', filename=row['before_photo']) }}" target="_blank">View Before Photo</a>
+                                        </div>
+                                        {% endif %}
+                                        {% if row['after_photo'] %}
+                                        <div class="col-md-6">
+                                            <strong>After Photo:</strong><br>
+                                            <a href="{{ url_for('static', filename=row['after_photo']) }}" target="_blank">View After Photo</a>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -324,7 +340,7 @@
                     </div>
                     {% else %}
                     <tr>
-                        <td colspan="10" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             No complaints found for the selected status/filter.
                         </td>
                     </tr>
