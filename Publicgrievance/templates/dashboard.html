@@ -71,6 +71,11 @@
             background:#dc3545;
         }
 
+        .inprogress-card{
+            background:#ffc107;
+            color:#222;
+        }
+
         .resolved-card{
             background:#198754;
         }
@@ -111,21 +116,28 @@
 
         <div class="row g-4">
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="count-card total-card">
                     <h4>Total Complaints</h4>
                     <div class="count-number">{{ total }}</div>
                 </div>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="count-card open-card">
                     <h4>Open Complaints</h4>
                     <div class="count-number">{{ open_count }}</div>
                 </div>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <div class="count-card inprogress-card">
+                    <h4>In Progress Complaints</h4>
+                    <div class="count-number">{{ in_progress }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
                 <div class="count-card resolved-card">
                     <h4>Resolved Complaints</h4>
                     <div class="count-number">{{ resolved }}</div>

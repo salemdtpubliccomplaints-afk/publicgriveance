@@ -326,15 +326,6 @@
                             <input type="text" name="informed_to_department" class="form-control" value="{{ row['informed_to_department'] }}">
                         </div>
                         <div class="col-md-4">
-                            <label>Initial Action Status</label>
-                            <select name="inital_action_status" class="form-control">
-                                <option value="">-- Select --</option>
-                                <option value="Pending" {% if row['inital_action_status']=="Pending" %}selected{% endif %}>Pending</option>
-                                <option value="In Progress" {% if row['inital_action_status']=="In Progress" %}selected{% endif %}>In Progress</option>
-                                <option value="Completed" {% if row['inital_action_status']=="Completed" %}selected{% endif %}>Completed</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
                             <label>Progress Update Status</label>
                             <select name="progress_update_status" class="form-control">
                                 <option value="">-- Select --</option>
@@ -348,6 +339,7 @@
                             <select name="final_resolution_status" class="form-control">
                                 <option value="">-- Select --</option>
                                 <option value="Open" {% if row['final_resolution_status']=="Open" %}selected{% endif %}>Open</option>
+                                <option value="In Progress" {% if row['final_resolution_status']=="In Progress" %}selected{% endif %}>In Progress</option>
                                 <option value="Resolved" {% if row['final_resolution_status']=="Resolved" %}selected{% endif %}>Resolved</option>
                                 <option value="Closed" {% if row['final_resolution_status']=="Closed" %}selected{% endif %}>Closed</option>
                             </select>

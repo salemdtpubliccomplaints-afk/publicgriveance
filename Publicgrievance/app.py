@@ -61,7 +61,6 @@ def initialize_database():
         ward_representative TEXT,
         response_details TEXT,
         informed_to_department TEXT,
-        inital_action_status TEXT,
         progress_update_status TEXT,
         final_resolution_status TEXT,
         remarks_and_notes TEXT,
@@ -85,7 +84,6 @@ def initialize_database():
         "ward_representative": "TEXT",
         "response_details": "TEXT",
         "informed_to_department": "TEXT",
-        "inital_action_status": "TEXT",
         "progress_update_status": "TEXT",
         "final_resolution_status": "TEXT",
         "remarks_and_notes": "TEXT",
@@ -203,26 +201,40 @@ def dashboard():
 
     conn = get_db()
 
-    total = conn.execute("SELECT COUNT(*) FROM complaints").fetchone()[0]
-
-    resolved = conn.execute(
-        """
-        SELECT COUNT(*)
-        FROM complaints
-        WHERE status='Resolved'
-        OR final_resolution_status='Resolved'
-        """
+    total = conn.execute(
+        "SELECT COUNT(*) FROM complaints"
     ).fetchone()[0]
 
-    open_count = total - resolved
+    open_count = conn.execute("""
+        SELECT COUNT(*)
+        FROM complaints
+        WHERE final_resolution_status IS NULL
+           OR final_resolution_status=''
+           OR final_resolution_status='Open'
+    """).fetchone()[0]
+
+    in_progress = conn.execute("""
+        SELECT COUNT(*)
+        FROM complaints
+        WHERE final_resolution_status='In Progress'
+    """).fetchone()[0]
+
+    resolved = conn.execute("""
+        SELECT COUNT(*)
+        FROM complaints
+        WHERE final_resolution_status='Resolved'
+           OR final_resolution_status='Closed'
+           OR status='Resolved'
+    """).fetchone()[0]
 
     conn.close()
 
     return render_template(
         "dashboard.html",
         total=total,
-        resolved=resolved,
-        open_count=open_count
+        open_count=open_count,
+        in_progress=in_progress,
+        resolved=resolved
     )
 
 
@@ -279,9 +291,8 @@ def save():
 
     after_photo_path = ""
     informed_to_department = ""
-    inital_action_status = ""
     progress_update_status = ""
-    final_resolution_status = ""
+    final_resolution_status = "Open"
     remarks_and_notes = ""
 
     if is_admin():
@@ -290,7 +301,6 @@ def save():
             "after"
         )
         informed_to_department = request.form.get("informed_to_department", "")
-        inital_action_status = request.form.get("inital_action_status", "")
         progress_update_status = request.form.get("progress_update_status", "")
         final_resolution_status = request.form.get("final_resolution_status", "")
         remarks_and_notes = request.form.get("remarks_and_notes", "")
@@ -314,7 +324,6 @@ def save():
             ward_representative,
             response_details,
             informed_to_department,
-            inital_action_status,
             progress_update_status,
             final_resolution_status,
             remarks_and_notes,
@@ -338,7 +347,6 @@ def save():
             request.form.get("ward_representative", ""),
             request.form.get("response_details", ""),
             informed_to_department,
-            inital_action_status,
             progress_update_status,
             final_resolution_status,
             remarks_and_notes,
@@ -428,7 +436,6 @@ def update(id):
                 ward_representative=?,
                 response_details=?,
                 informed_to_department=?,
-                inital_action_status=?,
                 progress_update_status=?,
                 final_resolution_status=?,
                 remarks_and_notes=?,
@@ -450,7 +457,6 @@ def update(id):
                 request.form.get("ward_representative", ""),
                 request.form.get("response_details", ""),
                 request.form.get("informed_to_department", ""),
-                request.form.get("inital_action_status", ""),
                 request.form.get("progress_update_status", ""),
                 request.form.get("final_resolution_status", ""),
                 request.form.get("remarks_and_notes", ""),
@@ -579,7 +585,6 @@ def export():
             response_details AS 'Response Details',
             before_photo AS 'Before Action Photo',
             informed_to_department AS 'Informed To Department',
-            inital_action_status AS 'Initial Action Status',
             progress_update_status AS 'Progress Update Status',
             final_resolution_status AS 'Final Resolution Status',
             after_photo AS 'After Resolution Photo',
@@ -632,21 +637,6 @@ def export():
 def logout():
     session.clear()
     return redirect("/login_page")
-
-
-
-@app.route("/db-test")
-def db_test():
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) FROM complaints")
-        count = cur.fetchone()[0]
-        cur.close()
-        conn.close()
-        return f"Database connected successfully. Complaints count: {count}"
-    except Exception as e:
-        return f"Database error: {str(e)}"
 
 
 if __name__ == "__main__":
