@@ -233,6 +233,18 @@
             </div>
 
             <div class="col-md-2">
+                <label class="form-label fw-bold">Zonal Office</label>
+                <select name="zonal_office" class="form-control">
+                    <option value="">All Zones</option>
+                    {% for zone in zones %}
+                    <option value="{{ zone['zonal_office'] }}" {% if selected_zone==zone['zonal_office'] %}selected{% endif %}>
+                        {{ zone['zonal_office'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
                 <label class="form-label fw-bold">Category</label>
                 <select name="category" class="form-control">
                     <option value="">All Categories</option>
@@ -329,6 +341,12 @@
                                         <div class="col-md-12"><strong>Ward Response:</strong><br>{{ row['response_details'] }}</div>
                                         <div class="col-md-12"><strong>Informed To Department:</strong><br>{{ row['informed_to_department'] }}</div>
                                         <div class="col-md-12"><strong>Progress Update Status:</strong><br>{{ row['progress_update_status'] or '-' }}</div>
+                                        <div class="col-md-12">
+                                            <strong>Remarks & Comments:</strong>
+                                            <div class="border rounded p-3 mt-2 bg-light">
+                                                {{ row['remarks_and_notes'] or 'No remarks/comments added yet.' }}
+                                            </div>
+                                        </div>
                                         <div class="col-md-12">
                                             <strong>Remarks & Comments:</strong>
                                             <div class="border rounded p-3 mt-2 bg-light">

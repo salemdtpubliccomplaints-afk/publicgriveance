@@ -205,6 +205,7 @@ def dashboard():
     keyword = request.args.get("keyword", "").strip()
     ward = request.args.get("ward", "").strip()
     category = request.args.get("category", "").strip()
+    zonal_office = request.args.get("zonal_office", "").strip()
     from_date = request.args.get("from_date", "").strip()
     to_date = request.args.get("to_date", "").strip()
 
@@ -276,6 +277,10 @@ def dashboard():
         where_clauses.append("category = ?")
         params.append(category)
 
+    if zonal_office:
+        where_clauses.append("zonal_office = ?")
+        params.append(zonal_office)
+
     if from_date:
         where_clauses.append("complaint_date >= ?")
         params.append(from_date)
@@ -321,6 +326,13 @@ def dashboard():
         ORDER BY ward_no
     """).fetchall()
 
+    zones = conn.execute("""
+        SELECT DISTINCT zonal_office
+        FROM complaints
+        WHERE zonal_office IS NOT NULL AND zonal_office != ''
+        ORDER BY zonal_office
+    """).fetchall()
+
     categories = conn.execute("""
         SELECT DISTINCT category
         FROM complaints
@@ -341,9 +353,11 @@ def dashboard():
         keyword=keyword,
         selected_ward=ward,
         selected_category=category,
+        selected_zone=zonal_office,
         from_date=from_date,
         to_date=to_date,
         wards=wards,
+        zones=zones,
         categories=categories
     )
 
