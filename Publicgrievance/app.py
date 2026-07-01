@@ -240,7 +240,7 @@ def dashboard():
     )
 
 
-@app.route("/search"
+@app.route("/search")
 def search():
     if "user" not in session:
         return redirect("/login_page")
