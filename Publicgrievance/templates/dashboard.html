@@ -349,13 +349,7 @@
                                                 {{ row['remarks_and_notes'] or 'No remarks/comments added yet.' }}
                                             </div>
                                         </div>
-                                        <div class="col-md-12">
-                                            <strong>Remarks & Comments:</strong>
-                                            <div class="border rounded p-3 mt-2 bg-light">
-                                                {{ row['remarks_and_notes'] or 'No remarks added yet.' }}
-                                            </div>
-                                        </div>
-                                        {% if row['before_photo'] %}
+                                       {% if row['before_photo'] %}
                                         <div class="col-md-6">
                                             <strong>Before Photo:</strong><br>
                                             <a href="{{ url_for('static', filename=row['before_photo']) }}" target="_blank">View Before Photo</a>
