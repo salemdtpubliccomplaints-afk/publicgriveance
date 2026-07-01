@@ -205,6 +205,8 @@ def dashboard():
     keyword = request.args.get("keyword", "").strip()
     ward = request.args.get("ward", "").strip()
     category = request.args.get("category", "").strip()
+    from_date = request.args.get("from_date", "").strip()
+    to_date = request.args.get("to_date", "").strip()
 
     conn = get_db()
 
@@ -274,6 +276,14 @@ def dashboard():
         where_clauses.append("category = ?")
         params.append(category)
 
+    if from_date:
+        where_clauses.append("complaint_date >= ?")
+        params.append(from_date)
+
+    if to_date:
+        where_clauses.append("complaint_date <= ?")
+        params.append(to_date)
+
     where_sql = ""
     if where_clauses:
         where_sql = "WHERE " + " AND ".join(where_clauses)
@@ -331,6 +341,8 @@ def dashboard():
         keyword=keyword,
         selected_ward=ward,
         selected_category=category,
+        from_date=from_date,
+        to_date=to_date,
         wards=wards,
         categories=categories
     )

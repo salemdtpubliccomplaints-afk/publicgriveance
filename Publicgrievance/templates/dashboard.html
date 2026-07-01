@@ -193,7 +193,7 @@
         <h4 class="dashboard-title mb-3">Status Details</h4>
 
         <form action="/dashboard" method="GET" class="row g-3 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label fw-bold">Status</label>
                 <select name="status" class="form-control">
                     <option value="total" {% if selected_status=='total' %}selected{% endif %}>Total Complaints</option>
@@ -203,11 +203,21 @@
                 </select>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label fw-bold">Search</label>
                 <input type="text" name="keyword" class="form-control"
                        placeholder="Name / Mobile / Remarks"
                        value="{{ keyword }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-bold">From Date</label>
+                <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-bold">To Date</label>
+                <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
             </div>
 
             <div class="col-md-2">
@@ -239,6 +249,14 @@
                 <a href="/dashboard" class="btn btn-secondary w-100">Clear</a>
             </div>
         </form>
+
+        {% if from_date or to_date %}
+        <div class="alert alert-info mt-3 mb-0">
+            Showing shortlisted complaints
+            {% if from_date %} from <strong>{{ from_date }}</strong>{% endif %}
+            {% if to_date %} to <strong>{{ to_date }}</strong>{% endif %}
+        </div>
+        {% endif %}
     </div>
 
     <div class="details-card">
