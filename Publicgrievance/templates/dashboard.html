@@ -6,21 +6,23 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
-       .banner-container{
-    width:100%;
-    text-align:center;
-    background:#fff;
-    padding:0;
-    margin:0;
-}
+        body { background:#f5f5f5; }
 
-.banner-image{
-    width:100%;
-    max-width:100%;
-    height:auto;
-    display:block;
-    margin:0 auto;
-}
+        .banner-container{
+            width:100%;
+            text-align:center;
+            background:#fff;
+            padding:0;
+            margin:0;
+        }
+
+        .banner-image{
+            width:100%;
+            max-width:100%;
+            height:auto;
+            display:block;
+            margin:0 auto;
+        }
 
         .title-section{
             text-align:center;
@@ -42,10 +44,10 @@
             margin-top:3px;
         }
 
-        .dashboard-card{
+        .dashboard-card, .filter-card, .details-card{
             background:white;
             border-radius:15px;
-            padding:25px;
+            padding:22px;
             margin-top:25px;
             box-shadow:0px 3px 10px rgba(0,0,0,0.15);
         }
@@ -57,34 +59,69 @@
 
         .count-card{
             border-radius:15px;
-            padding:25px;
+            padding:22px;
             color:white;
             text-align:center;
             box-shadow:0 3px 10px rgba(0,0,0,0.15);
+            text-decoration:none;
+            display:block;
+            min-height:140px;
         }
 
-        .total-card{
-            background:#0d6efd;
+        .count-card:hover{
+            opacity:0.92;
+            transform:translateY(-2px);
+            transition:0.2s;
         }
 
-        .open-card{
-            background:#dc3545;
-        }
-
-        .inprogress-card{
-            background:#ffc107;
-            color:#222;
-        }
-
-        .resolved-card{
-            background:#198754;
-        }
+        .total-card{ background:#0d6efd; }
+        .open-card{ background:#dc3545; }
+        .inprogress-card{ background:#ffc107; color:#222; }
+        .resolved-card{ background:#198754; }
 
         .count-number{
             font-size:42px;
             font-weight:800;
         }
-    </style>
+
+        .table-container{
+            overflow-x:auto;
+        }
+
+        table{
+            white-space:nowrap;
+            font-size:13px;
+        }
+
+        thead th{
+            background:#7a0019 !important;
+            color:white !important;
+            text-align:center;
+            vertical-align:middle;
+        }
+
+        tbody td{ vertical-align:middle; }
+
+        .remarks-cell{
+            max-width:320px;
+            white-space:normal;
+        }
+
+        .badge-open{ background:#dc3545; }
+        .badge-progress{ background:#ffc107; color:#222; }
+        .badge-resolved{ background:#198754; }
+
+        @media (max-width:768px){
+            .banner-image{ height:90px; }
+            .title-tamil{ font-size:16px; }
+            .title-english{ font-size:11px; }
+            .count-number{ font-size:34px; }
+        }
+    
+        .hide-progress-column .progress-column{
+            display:none;
+        }
+</style>
 </head>
 
 <body>
@@ -106,7 +143,7 @@
     </div>
 </div>
 
-<div class="container">
+<div class="container-fluid px-4 mb-5">
 
     <div class="dashboard-card">
 
@@ -117,44 +154,214 @@
         <div class="row g-4">
 
             <div class="col-md-3">
-                <div class="count-card total-card">
+                <a href="/dashboard?status=total" class="count-card total-card">
                     <h4>Total Complaints</h4>
                     <div class="count-number">{{ total }}</div>
-                </div>
+                </a>
             </div>
 
             <div class="col-md-3">
-                <div class="count-card open-card">
+                <a href="/dashboard?status=open" class="count-card open-card">
                     <h4>Open Complaints</h4>
                     <div class="count-number">{{ open_count }}</div>
-                </div>
+                </a>
             </div>
 
             <div class="col-md-3">
-                <div class="count-card inprogress-card">
+                <a href="/dashboard?status=in_progress" class="count-card inprogress-card">
                     <h4>In Progress Complaints</h4>
                     <div class="count-number">{{ in_progress }}</div>
-                </div>
+                </a>
             </div>
 
             <div class="col-md-3">
-                <div class="count-card resolved-card">
+                <a href="/dashboard?status=resolved" class="count-card resolved-card">
                     <h4>Resolved Complaints</h4>
                     <div class="count-number">{{ resolved }}</div>
-                </div>
+                </a>
             </div>
 
         </div>
+    </div>
 
-        <div class="text-center mt-4">
-            <a href="/" class="btn btn-secondary">
-                Back
-            </a>
+    <div class="filter-card">
+        <h4 class="dashboard-title mb-3">Status Details</h4>
+
+        <form action="/dashboard" method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Status</label>
+                <select name="status" class="form-control">
+                    <option value="total" {% if selected_status=='total' %}selected{% endif %}>Total Complaints</option>
+                    <option value="open" {% if selected_status=='open' %}selected{% endif %}>Open Complaints</option>
+                    <option value="in_progress" {% if selected_status=='in_progress' %}selected{% endif %}>In Progress Complaints</option>
+                    <option value="resolved" {% if selected_status=='resolved' %}selected{% endif %}>Resolved Complaints</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Search</label>
+                <input type="text" name="keyword" class="form-control"
+                       placeholder="Name / Mobile / Remarks"
+                       value="{{ keyword }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Ward</label>
+                <select name="ward" class="form-control">
+                    <option value="">All Wards</option>
+                    {% for ward_row in wards %}
+                    <option value="{{ ward_row['ward_no'] }}" {% if selected_ward == ward_row['ward_no'] %}selected{% endif %}>
+                        {{ ward_row['ward_no'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Category</label>
+                <select name="category" class="form-control">
+                    <option value="">All Categories</option>
+                    {% for category_row in categories %}
+                    <option value="{{ category_row['category'] }}" {% if selected_category == category_row['category'] %}selected{% endif %}>
+                        {{ category_row['category'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Fetch Details</button>
+                <a href="/dashboard" class="btn btn-secondary w-100">Clear</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="details-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h4 class="dashboard-title mb-0">Complaint Status Details</h4>
+            <a href="/" class="btn btn-secondary">Back</a>
         </div>
 
+        <div class="table-container">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Ward</th>
+                        <th>Petitioner</th>
+                        <th>Mobile</th>
+                        <th>Category</th>
+                        <th>Final Status</th>
+                        <th class="progress-column">Progress</th>
+                        <th>Remarks & Comments</th>
+                        <th>More Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in complaints %}
+                    {% set final_status = row['final_resolution_status'] or 'Open' %}
+                    <tr>
+                        <td class="text-center">{{ row['id'] }}</td>
+                        <td>{{ row['complaint_date'] }}</td>
+                        <td class="text-center">{{ row['ward_no'] }}</td>
+                        <td>{{ row['petitioner_name'] }}</td>
+                        <td>{{ row['mobile'] }}</td>
+                        <td>{{ row['category'] }}</td>
+                        <td class="text-center">
+                            {% if final_status == 'In Progress' %}
+                                <span class="badge badge-progress">In Progress</span>
+                            {% elif final_status == 'Resolved' or final_status == 'Closed' %}
+                                <span class="badge badge-resolved">Resolved</span>
+                            {% else %}
+                                <span class="badge badge-open">Open</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ row['progress_update_status'] }}</td>
+                        <td class="remarks-cell">{{ row['remarks_and_notes'] }}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#detailsModal{{ row['id'] }}">
+                                View
+                            </button>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="detailsModal{{ row['id'] }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header" style="background:#7a0019;color:white;">
+                                    <h5 class="modal-title">Complaint Details - ID {{ row['id'] }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6"><strong>Petitioner:</strong> {{ row['petitioner_name'] }}</div>
+                                        <div class="col-md-6"><strong>Mobile:</strong> {{ row['mobile'] }}</div>
+                                        <div class="col-md-6"><strong>Ward:</strong> {{ row['ward_no'] }}</div>
+                                        <div class="col-md-6"><strong>Zonal Office:</strong> {{ row['zonal_office'] }}</div>
+                                        <div class="col-md-6"><strong>Category:</strong> {{ row['category'] }}</div>
+                                        <div class="col-md-6"><strong>Final Status:</strong> {{ final_status }}</div>
+                                        <div class="col-md-12"><strong>Description:</strong><br>{{ row['description'] }}</div>
+                                        <div class="col-md-12"><strong>Ward Response:</strong><br>{{ row['response_details'] }}</div>
+                                        <div class="col-md-12"><strong>Informed To Department:</strong><br>{{ row['informed_to_department'] }}</div>
+                                        <div class="col-md-12"><strong>Progress Update Status:</strong><br>{{ row['progress_update_status'] }}</div>
+                                        <div class="col-md-12">
+                                            <strong>Remarks & Comments:</strong>
+                                            <div class="border rounded p-3 mt-2 bg-light">
+                                                {{ row['remarks_and_notes'] or 'No remarks added yet.' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <a href="/edit/{{ row['id'] }}" class="btn btn-warning">Edit Complaint</a>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center text-muted py-4">
+                            No complaints found for the selected status/filter.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const statusSelect = document.querySelector('select[name="status"]') || document.querySelector('select[name="status_filter"]');
+    const table = document.querySelector("table");
+
+    function toggleProgressColumn() {
+        if (!statusSelect || !table) return;
+
+        const selectedText = statusSelect.options[statusSelect.selectedIndex].text.toLowerCase();
+        const selectedValue = (statusSelect.value || "").toLowerCase();
+
+        if (selectedText.includes("resolved") || selectedValue.includes("resolved")) {
+            table.classList.add("hide-progress-column");
+        } else {
+            table.classList.remove("hide-progress-column");
+        }
+    }
+
+    toggleProgressColumn();
+    if (statusSelect) {
+        statusSelect.addEventListener("change", toggleProgressColumn);
+    }
+});
+</script>
 
 </body>
 </html>

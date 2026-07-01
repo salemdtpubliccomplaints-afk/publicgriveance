@@ -61,6 +61,7 @@ def initialize_database():
         ward_representative TEXT,
         response_details TEXT,
         informed_to_department TEXT,
+        inital_action_status TEXT,
         progress_update_status TEXT,
         final_resolution_status TEXT,
         remarks_and_notes TEXT,
@@ -84,6 +85,7 @@ def initialize_database():
         "ward_representative": "TEXT",
         "response_details": "TEXT",
         "informed_to_department": "TEXT",
+        "inital_action_status": "TEXT",
         "progress_update_status": "TEXT",
         "final_resolution_status": "TEXT",
         "remarks_and_notes": "TEXT",
@@ -199,6 +201,11 @@ def dashboard():
     if "user" not in session:
         return redirect("/login_page")
 
+    selected_status = request.args.get("status", "total")
+    keyword = request.args.get("keyword", "").strip()
+    ward = request.args.get("ward", "").strip()
+    category = request.args.get("category", "").strip()
+
     conn = get_db()
 
     total = conn.execute(
@@ -227,6 +234,90 @@ def dashboard():
            OR status='Resolved'
     """).fetchone()[0]
 
+    where_clauses = []
+    params = []
+
+    if selected_status == "open":
+        where_clauses.append("""
+            (final_resolution_status IS NULL
+             OR final_resolution_status=''
+             OR final_resolution_status='Open')
+        """)
+    elif selected_status == "in_progress":
+        where_clauses.append("final_resolution_status='In Progress'")
+    elif selected_status == "resolved":
+        where_clauses.append("""
+            (final_resolution_status='Resolved'
+             OR final_resolution_status='Closed'
+             OR status='Resolved')
+        """)
+
+    if keyword:
+        where_clauses.append("""
+            (petitioner_name LIKE ?
+             OR mobile LIKE ?
+             OR ward_no LIKE ?
+             OR category LIKE ?
+             OR zonal_office LIKE ?
+             OR description LIKE ?
+             OR response_details LIKE ?
+             OR remarks_and_notes LIKE ?)
+        """)
+        search_value = f"%{keyword}%"
+        params.extend([search_value] * 8)
+
+    if ward:
+        where_clauses.append("ward_no = ?")
+        params.append(ward)
+
+    if category:
+        where_clauses.append("category = ?")
+        params.append(category)
+
+    where_sql = ""
+    if where_clauses:
+        where_sql = "WHERE " + " AND ".join(where_clauses)
+
+    complaints = conn.execute(
+        f"""
+        SELECT
+            id,
+            complaint_date,
+            zonal_office,
+            petitioner_name,
+            mobile,
+            ward_no,
+            category,
+            description,
+            ward_notification_status,
+            ward_representative,
+            response_details,
+            informed_to_department,
+            progress_update_status,
+            final_resolution_status,
+            remarks_and_notes,
+            status
+        FROM complaints
+        {where_sql}
+        ORDER BY id DESC
+        """,
+        params
+    ).fetchall()
+
+    wards = conn.execute("""
+        SELECT DISTINCT ward_no
+        FROM complaints
+        WHERE ward_no IS NOT NULL AND ward_no != ''
+        ORDER BY ward_no
+    """).fetchall()
+
+    categories = conn.execute("""
+        SELECT DISTINCT category
+        FROM complaints
+        WHERE category IS NOT NULL AND category != ''
+        ORDER BY category
+    """).fetchall()
+
     conn.close()
 
     return render_template(
@@ -234,7 +325,14 @@ def dashboard():
         total=total,
         open_count=open_count,
         in_progress=in_progress,
-        resolved=resolved
+        resolved=resolved,
+        complaints=complaints,
+        selected_status=selected_status,
+        keyword=keyword,
+        selected_ward=ward,
+        selected_category=category,
+        wards=wards,
+        categories=categories
     )
 
 
@@ -291,6 +389,7 @@ def save():
 
     after_photo_path = ""
     informed_to_department = ""
+    inital_action_status = ""
     progress_update_status = ""
     final_resolution_status = "Open"
     remarks_and_notes = ""
@@ -301,6 +400,7 @@ def save():
             "after"
         )
         informed_to_department = request.form.get("informed_to_department", "")
+        inital_action_status = request.form.get("inital_action_status", "")
         progress_update_status = request.form.get("progress_update_status", "")
         final_resolution_status = request.form.get("final_resolution_status", "")
         remarks_and_notes = request.form.get("remarks_and_notes", "")
@@ -324,6 +424,7 @@ def save():
             ward_representative,
             response_details,
             informed_to_department,
+            inital_action_status,
             progress_update_status,
             final_resolution_status,
             remarks_and_notes,
@@ -347,6 +448,7 @@ def save():
             request.form.get("ward_representative", ""),
             request.form.get("response_details", ""),
             informed_to_department,
+            inital_action_status,
             progress_update_status,
             final_resolution_status,
             remarks_and_notes,
@@ -436,6 +538,7 @@ def update(id):
                 ward_representative=?,
                 response_details=?,
                 informed_to_department=?,
+                inital_action_status=?,
                 progress_update_status=?,
                 final_resolution_status=?,
                 remarks_and_notes=?,
@@ -457,6 +560,7 @@ def update(id):
                 request.form.get("ward_representative", ""),
                 request.form.get("response_details", ""),
                 request.form.get("informed_to_department", ""),
+                request.form.get("inital_action_status", ""),
                 request.form.get("progress_update_status", ""),
                 request.form.get("final_resolution_status", ""),
                 request.form.get("remarks_and_notes", ""),
@@ -585,6 +689,7 @@ def export():
             response_details AS 'Response Details',
             before_photo AS 'Before Action Photo',
             informed_to_department AS 'Informed To Department',
+            inital_action_status AS 'Initial Action Status',
             progress_update_status AS 'Progress Update Status',
             final_resolution_status AS 'Final Resolution Status',
             after_photo AS 'After Resolution Photo',
