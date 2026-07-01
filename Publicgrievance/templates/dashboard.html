@@ -187,6 +187,10 @@
             </div>
 
         </div>
+
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-secondary">Back</a>
+        </div>
     </div>
 
     {% if session.get('role') == 'Admin' %}
@@ -349,7 +353,7 @@
                                                 {{ row['remarks_and_notes'] or 'No remarks/comments added yet.' }}
                                             </div>
                                         </div>
-                                       {% if row['before_photo'] %}
+                                        {% if row['before_photo'] %}
                                         <div class="col-md-6">
                                             <strong>Before Photo:</strong><br>
                                             <a href="{{ url_for('static', filename=row['before_photo']) }}" target="_blank">View Before Photo</a>
