@@ -263,11 +263,11 @@
                     <td>{{ row.response_details }}</td>
 
                     <td>
-                        {% if row.after_photo %}
-                            {% if row.after_photo.startswith('http') %}
-                                <a href="{{ row.after_photo }}" target="_blank">View</a>
+                        {% if row.before_photo %}
+                            {% if row.before_photo.startswith('http') %}
+                                <a href="{{ row.before_photo }}" target="_blank">View</a>
                             {% else %}
-                                <a href="{{ url_for('static', filename=row.after_photo) }}" target="_blank">View</a>
+                                <a href="{{ url_for('static', filename=row.before_photo) }}" target="_blank">View</a>
                             {% endif %}
                         {% else %}
                             No Photo
@@ -280,15 +280,15 @@
                     <td>{{ row.progress_update_status }}</td>
                     <td>{{ row.final_resolution_status }}</td>
                     <td>
-                       {% if row.before_photo %}
-    {% if row.before_photo.startswith('http') %}
-        <a href="{{ row.after_photo }}" target="_blank">View</a>
-    {% else %}
-        <a href="{{ url_for('static', filename=row.after_photo) }}" target="_blank">View</a>
-    {% endif %}
-{% else %}
-    No Photo
-{% endif %}
+                        {% if row.after_photo %}
+                            {% if row.after_photo.startswith('http') %}
+                                <a href="{{ row.after_photo }}" target="_blank">View</a>
+                            {% else %}
+                                <a href="{{ url_for('static', filename=row.after_photo) }}" target="_blank">View</a>
+                            {% endif %}
+                        {% else %}
+                            No Photo
+                        {% endif %}
                     </td>
                     <td>{{ row.remarks_and_notes }}</td>
                     {% endif %}
