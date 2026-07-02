@@ -185,31 +185,36 @@
     <div class="page-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="page-title mb-0">Edit Complaint</h2>
-                <small class="text-muted">Update grievance details</small>
+                <h2 class="page-title mb-0">{% if current_lang == 'ta' %}புகார் திருத்தம்{% else %}Edit Complaint{% endif %}</h2>
+                <small class="text-muted">{% if current_lang == "ta" %}புகார் விவரங்களை புதுப்பிக்கவும்{% else %}Update grievance details{% endif %}</small>
                 <div class="mt-1">
                     <strong>Complaint No:</strong> {{ row['complaint_no'] or row['id'] }}
                 </div>
             </div>
-            <a href="/" class="btn btn-secondary">← Back</a>
+            <div class="text-center mb-2">
+            <span class="fw-bold">🌐 Version / மொழி:</span>
+            <a href="/set_language/en" class="btn btn-sm {% if current_lang == 'en' %}btn-primary{% else %}btn-outline-primary{% endif %}">English</a>
+            <a href="/set_language/ta" class="btn btn-sm {% if current_lang == 'ta' %}btn-primary{% else %}btn-outline-primary{% endif %}">தமிழ்</a>
+        </div>
+            <a href="/" class="btn btn-secondary">← {% if current_lang == 'ta' %}திரும்ப{% else %}Back{% endif %}</a>
         </div>
 
         <form action="/update/{{ row['id'] }}" method="POST" enctype="multipart/form-data">
 
             <div class="card section-card">
-                <div class="card-header text-white" style="background:#7a0019;">Complaint Information</div>
+                <div class="card-header text-white" style="background:#7a0019;">{% if current_lang == "ta" %}புகார் தகவல்{% else %}Complaint Information{% endif %}</div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label>Complaint Attender</label>
+                            <label>{% if current_lang == "ta" %}புகார் பெறுபவர்{% else %}Complaint Attender{% endif %}</label>
                             <input type="text" name="complaint_attender" class="form-control" value="{{ row['complaint_attender'] }}">
                         </div>
                         <div class="col-md-4">
-                            <label>Complaint Date</label>
+                            <label>{% if current_lang == "ta" %}புகார் தேதி{% else %}Complaint Date{% endif %}</label>
                             <input type="date" name="complaint_date" class="form-control" value="{{ row['complaint_date'] }}">
                         </div>
                         <div class="col-md-4">
-                            <label>Zonal Office</label>
+                            <label>{% if current_lang == "ta" %}மண்டல அலுவலகம்{% else %}Zonal Office{% endif %}</label>
                             <select name="zonal_office" class="form-control">
                                 <option value="">-- Select --</option>
                                 <option value="Ammapet Zone-III" {% if row['zonal_office']=="Ammapet Zone-III" %}selected{% endif %}>Ammapet Zone-III</option>
@@ -217,11 +222,11 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label>Ward Number</label>
+                            <label>{% if current_lang == "ta" %}வார்டு எண்{% else %}Ward Number{% endif %}</label>
                             <input type="text" name="ward_no" class="form-control" value="{{ row['ward_no'] }}">
                         </div>
                         <div class="col-md-4">
-                            <label>Ward Representative</label>
+                            <label>{% if current_lang == "ta" %}வார்டு பிரதிநிதி{% else %}Ward Representative{% endif %}</label>
                             <input type="text" name="ward_representative" class="form-control" value="{{ row['ward_representative'] }}">
                         </div>
                     </div>
@@ -229,19 +234,19 @@
             </div>
 
             <div class="card section-card">
-                <div class="card-header text-white" style="background:#198754;">Petitioner Information</div>
+                <div class="card-header text-white" style="background:#198754;">{% if current_lang == "ta" %}மனுதாரர் தகவல்{% else %}Petitioner Information{% endif %}</div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label>Petitioner Name</label>
+                            <label>{% if current_lang == "ta" %}மனுதாரர் பெயர்{% else %}Petitioner Name{% endif %}</label>
                             <input type="text" name="petitioner_name" class="form-control" value="{{ row['petitioner_name'] }}">
                         </div>
                         <div class="col-md-6">
-                            <label>Mobile Number</label>
+                            <label>{% if current_lang == "ta" %}மொபைல் எண்{% else %}Mobile Number{% endif %}</label>
                             <input type="text" name="mobile" class="form-control" value="{{ row['mobile'] }}">
                         </div>
                         <div class="col-md-12">
-                            <label>Petitioner Address</label>
+                            <label>{% if current_lang == "ta" %}மனுதாரர் முகவரி{% else %}Petitioner Address{% endif %}</label>
                             <textarea name="petitioner_address" class="form-control" rows="3">{{ row['petitioner_address'] }}</textarea>
                         </div>
                     </div>
@@ -249,11 +254,11 @@
             </div>
 
             <div class="card section-card">
-                <div class="card-header" style="background:#ffcc00;">Complaint Details</div>
+                <div class="card-header" style="background:#ffcc00;">{% if current_lang == "ta" %}புகார் விவரங்கள்{% else %}Complaint Details{% endif %}</div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label>Category</label>
+                            <label>{% if current_lang == "ta" %}பிரிவு{% else %}Category{% endif %}</label>
                             <select name="category" class="form-control">
                                 <option value="">-- Select Category --</option>
                                 {% for option in [
@@ -274,11 +279,11 @@
                             </select>
                         </div>
                         <div class="col-md-12">
-                            <label>Description</label>
+                            <label>{% if current_lang == "ta" %}விவரம்{% else %}Description{% endif %}</label>
                             <textarea name="description" class="form-control" rows="4">{{ row['description'] }}</textarea>
                         </div>
                         <div class="col-md-6">
-                            <label>Before Action Photo</label>
+                            <label>{% if current_lang == "ta" %}நடவடிக்கைக்கு முன் புகைப்படம்{% else %}Before Action Photo{% endif %}</label>
                             <input type="file" name="before_photo" class="form-control" accept="image/*">
                             {% if row['before_photo'] %}
                             {% if row['before_photo'].startswith('http') %}
@@ -291,7 +296,7 @@
 
                         {% if session.get('role') == 'Admin' %}
                         <div class="col-md-6">
-                            <label>After Resolution Photo</label>
+                            <label>{% if current_lang == "ta" %}தீர்வுக்குப் பின் புகைப்படம்{% else %}After Resolution Photo{% endif %}</label>
                             <input type="file" name="after_photo" class="form-control" accept="image/*">
                             {% if row['after_photo'] %}
                             {% if row['after_photo'].startswith('http') %}
@@ -307,11 +312,11 @@
             </div>
 
             <div class="card section-card">
-                <div class="card-header text-white" style="background:#0d6efd;">Ward Response</div>
+                <div class="card-header text-white" style="background:#0d6efd;">{% if current_lang == "ta" %}வார்டு பதில்{% else %}Ward Response{% endif %}</div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label>Ward Notification Status</label>
+                            <label>{% if current_lang == "ta" %}வார்டு தகவல் நிலை{% else %}Ward Notification Status{% endif %}</label>
                             <select name="ward_notification_status" class="form-control">
                                 <option value="">-- Select --</option>
                                 <option value="Pending" {% if row['ward_notification_status']=="Pending" %}selected{% endif %}>Pending</option>
@@ -320,7 +325,7 @@
                             </select>
                         </div>
                         <div class="col-md-12">
-                            <label>Response Details</label>
+                            <label>{% if current_lang == "ta" %}பதில் விவரங்கள்{% else %}Response Details{% endif %}</label>
                             <textarea name="response_details" class="form-control" rows="3">{{ row['response_details'] }}</textarea>
                         </div>
                     </div>
@@ -329,15 +334,15 @@
 
             {% if session.get('role') == 'Admin' %}
             <div class="card section-card">
-                <div class="card-header text-white" style="background:#0d6efd;">Department Action - Admin Only</div>
+                <div class="card-header text-white" style="background:#0d6efd;">{% if current_lang == "ta" %}துறை நடவடிக்கை - Admin மட்டும்{% else %}Department Action - Admin Only{% endif %}</div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label>Informed To Department</label>
+                            <label>{% if current_lang == "ta" %}துறைக்கு தெரிவிக்கப்பட்டது{% else %}Informed To Department{% endif %}</label>
                             <input type="text" name="informed_to_department" class="form-control" value="{{ row['informed_to_department'] }}">
                         </div>
                         <div class="col-md-4">
-                            <label>Progress Update Status</label>
+                            <label>{% if current_lang == "ta" %}முன்னேற்ற நிலை{% else %}Progress Update Status{% endif %}</label>
                             <select name="progress_update_status" class="form-control">
                                 <option value="">-- Select --</option>
                                 <option value="Pending" {% if row['progress_update_status']=="Pending" %}selected{% endif %}>Pending</option>
@@ -346,7 +351,7 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label>Final Resolution Status</label>
+                            <label>{% if current_lang == "ta" %}இறுதி தீர்வு நிலை{% else %}Final Resolution Status{% endif %}</label>
                             <select name="final_resolution_status" class="form-control">
                                 <option value="">-- Select --</option>
                                 <option value="Open" {% if row['final_resolution_status']=="Open" %}selected{% endif %}>Open</option>
@@ -356,7 +361,7 @@
                             </select>
                         </div>
                         <div class="col-md-12">
-                            <label>Remarks & Notes</label>
+                            <label>{% if current_lang == "ta" %}குறிப்புகள்{% else %}Remarks & Notes{% endif %}</label>
                             <textarea name="remarks_and_notes" class="form-control" rows="3">{{ row['remarks_and_notes'] }}</textarea>
                         </div>
                     </div>
@@ -365,14 +370,14 @@
             {% endif %}
 
             <div class="form-actions d-flex gap-2 flex-wrap">
-                <button type="submit" class="btn btn-theme">Update Complaint</button>
+                <button type="submit" class="btn btn-theme">{% if current_lang == "ta" %}புகார் புதுப்பிக்கவும்{% else %}Update Complaint{% endif %}</button>
 
                 {% if session.get('role') == 'Admin' %}
-                <a href="/resolve/{{ row['id'] }}" class="btn btn-success">Resolve</a>
-                <a href="/delete/{{ row['id'] }}" class="btn btn-danger" onclick="return confirm('Delete this complaint?')">Delete</a>
+                <a href="/resolve/{{ row['id'] }}" class="btn btn-success">{% if current_lang == "ta" %}தீர்வு செய்{% else %}Resolve{% endif %}</a>
+                <a href="/delete/{{ row['id'] }}" class="btn btn-danger" onclick="return confirm('Delete this complaint?')">{% if current_lang == "ta" %}நீக்கு{% else %}Delete{% endif %}</a>
                 {% endif %}
 
-                <a href="/" class="btn btn-secondary">Cancel</a>
+                <a href="/" class="btn btn-secondary">{% if current_lang == "ta" %}ரத்து செய்{% else %}Cancel{% endif %}</a>
             </div>
         </form>
     </div>

@@ -186,13 +186,18 @@
 <div class="container-fluid mt-3">
 
     <div class="dashboard-card mb-3">
-        <h2 class="dashboard-title text-center mb-3">Public Grievance Dashboard</h2>
+        <h2 class="dashboard-title text-center mb-3">{% if current_lang == "ta" %}மக்கள் குறைதீர் முகப்பு{% else %}Public Grievance Dashboard{% endif %}</h2>
 
+        <div class="text-center mb-2">
+            <span class="fw-bold">🌐 Version / மொழி:</span>
+            <a href="/set_language/en" class="btn btn-sm {% if current_lang == 'en' %}btn-primary{% else %}btn-outline-primary{% endif %}">English</a>
+            <a href="/set_language/ta" class="btn btn-sm {% if current_lang == 'ta' %}btn-primary{% else %}btn-outline-primary{% endif %}">தமிழ்</a>
+        </div>
         <div class="text-center">
-            <a href="/add" class="btn btn-primary btn-sm">➕ Add Complaint</a>
-            <a href="/dashboard" class="btn btn-success btn-sm">📊 Dashboard</a>
-            <a href="/export" class="btn btn-warning btn-sm">📥 Export Excel</a>
-            <a href="/logout" class="btn btn-danger btn-sm">🚪 Logout</a>
+            <a href="/add" class="btn btn-primary btn-sm">➕ {% if current_lang == 'ta' %}புகார் பதிவு{% else %}Add Complaint{% endif %}</a>
+            <a href="/dashboard" class="btn btn-success btn-sm">{% if current_lang == "ta" %}📊 முகப்பு பலகை{% else %}📊 Dashboard{% endif %}</a>
+            <a href="/export" class="btn btn-warning btn-sm">{% if current_lang == "ta" %}📥 Excel பதிவிறக்கம்{% else %}📥 Export Excel{% endif %}</a>
+            <a href="/logout" class="btn btn-danger btn-sm">{% if current_lang == "ta" %}🚪 வெளியேறு{% else %}🚪 Logout{% endif %}</a>
         </div>
     </div>
 
@@ -200,7 +205,7 @@
         <form action="/search">
             <div class="row g-2 align-items-center">
                 <div class="col-md-6">
-                    <input class="form-control" name="keyword" placeholder="Search by Complaint No / Petitioner Name / Mobile / Ward No / Category / Zonal Office">
+                    <input class="form-control" name="keyword" placeholder="{% if current_lang == 'ta' %}புகார் எண் / மனுதாரர் பெயர் / மொபைல் / வார்டு / பிரிவு / மண்டல அலுவலகம் மூலம் தேடவும்{% else %}Search by Complaint No / Petitioner Name / Mobile / Ward No / Category / Zonal Office{% endif %}">
                 </div>
                 <div class="col-md-2">
                     <button class="btn btn-info w-100">🔍 Search</button>
@@ -216,32 +221,32 @@
         <table class="table table-bordered table-hover table-sm">
             <thead>
                 <tr>
-                    <th>Complaint No</th>
-                    <th>Complaint Attender</th>
-                    <th>Date</th>
-                    <th>Zonal Office</th>
-                    <th>Petitioner Name</th>
-                    <th>Mobile</th>
-                    <th>Address</th>
-                    <th>Ward No</th>
-                    <th>Category</th>
-                    <th>Description</th>
-                    <th>Ward Status</th>
-                    <th>Representative</th>
-                    <th>Response</th>
-                    <th>Before Photo</th>
+                    <th>{% if current_lang == "ta" %}புகார் எண்{% else %}Complaint No{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}புகார் பெறுபவர்{% else %}Complaint Attender{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}தேதி{% else %}Date{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}மண்டல அலுவலகம்{% else %}Zonal Office{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}மனுதாரர் பெயர்{% else %}Petitioner Name{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}மொபைல்{% else %}Mobile{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}முகவரி{% else %}Address{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}வார்டு எண்{% else %}Ward No{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}பிரிவு{% else %}Category{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}விவரம்{% else %}Description{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}வார்டு நிலை{% else %}Ward Status{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}பிரதிநிதி{% else %}Representative{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}பதில்{% else %}Response{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}முன் புகைப்படம்{% else %}Before Photo{% endif %}</th>
 
                     {% if session.get('role') == 'Admin' %}
-                    <th>Department</th>
-                    <th>Initial Action</th>
-                    <th>Progress</th>
-                    <th>Final Resolution</th>
-                    <th>After Photo</th>
-                    <th>Remarks</th>
+                    <th>{% if current_lang == "ta" %}துறை{% else %}Department{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}ஆரம்ப நடவடிக்கை{% else %}Initial Action{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}முன்னேற்றம்{% else %}Progress{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}இறுதி நிலை{% else %}Final Resolution{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}பின் புகைப்படம்{% else %}After Photo{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}குறிப்புகள்{% else %}Remarks{% endif %}</th>
                     {% endif %}
 
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>{% if current_lang == "ta" %}நிலை{% else %}Status{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}செயல்கள்{% else %}Actions{% endif %}</th>
                 </tr>
             </thead>
 

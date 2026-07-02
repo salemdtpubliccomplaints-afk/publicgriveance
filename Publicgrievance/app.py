@@ -301,6 +301,22 @@ def is_admin():
 initialize_database()
 
 
+@app.route("/set_language/<lang>")
+def set_language(lang):
+    if lang not in ("en", "ta"):
+        lang = "en"
+
+    session["lang"] = lang
+    return redirect(request.referrer or "/")
+
+
+@app.context_processor
+def inject_language():
+    return {
+        "current_lang": session.get("lang", "en")
+    }
+
+
 @app.route("/login_page")
 def login_page():
     return render_template("login.html")

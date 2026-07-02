@@ -153,35 +153,40 @@
     <div class="dashboard-card">
 
         <h2 class="dashboard-title text-center mb-4">
-            Public Grievance Dashboard
+            {% if current_lang == 'ta' %}மக்கள் குறைதீர் முகப்பு பலகை{% else %}Public Grievance Dashboard{% endif %}
         </h2>
+        <div class="text-center mb-2">
+            <span class="fw-bold">🌐 Version / மொழி:</span>
+            <a href="/set_language/en" class="btn btn-sm {% if current_lang == 'en' %}btn-primary{% else %}btn-outline-primary{% endif %}">English</a>
+            <a href="/set_language/ta" class="btn btn-sm {% if current_lang == 'ta' %}btn-primary{% else %}btn-outline-primary{% endif %}">தமிழ்</a>
+        </div>
 
         <div class="row g-4">
 
             <div class="col-md-3">
                 <a href="/dashboard?status=total" class="count-card total-card">
-                    <h4>Total Complaints</h4>
+                    <h4>{% if current_lang == "ta" %}மொத்த புகார்கள்{% else %}Total Complaints{% endif %}</h4>
                     <div class="count-number">{{ total }}</div>
                 </a>
             </div>
 
             <div class="col-md-3">
                 <a href="/dashboard?status=open" class="count-card open-card">
-                    <h4>Open Complaints</h4>
+                    <h4>{% if current_lang == "ta" %}நிலுவை புகார்கள்{% else %}Open Complaints{% endif %}</h4>
                     <div class="count-number">{{ open_count }}</div>
                 </a>
             </div>
 
             <div class="col-md-3">
                 <a href="/dashboard?status=in_progress" class="count-card inprogress-card">
-                    <h4>In Progress Complaints</h4>
+                    <h4>{% if current_lang == "ta" %}செயல்பாட்டில் உள்ள புகார்கள்{% else %}In Progress Complaints{% endif %}</h4>
                     <div class="count-number">{{ in_progress }}</div>
                 </a>
             </div>
 
             <div class="col-md-3">
                 <a href="/dashboard?status=resolved" class="count-card resolved-card">
-                    <h4>Resolved Complaints</h4>
+                    <h4>{% if current_lang == "ta" %}தீர்வு செய்யப்பட்ட புகார்கள்{% else %}Resolved Complaints{% endif %}</h4>
                     <div class="count-number">{{ resolved }}</div>
                 </a>
             </div>
@@ -189,47 +194,47 @@
         </div>
 
         <div class="text-center mt-4">
-            <a href="/" class="btn btn-secondary">Back</a>
+            <a href="/" class="btn btn-secondary">{% if current_lang == "ta" %}திரும்ப{% else %}Back{% endif %}</a>
         </div>
     </div>
 
     {% if session.get('role') == 'Admin' %}
 
     <div class="filter-card">
-        <h4 class="dashboard-title mb-3">Status Details</h4>
+        <h4 class="dashboard-title mb-3">{% if current_lang == "ta" %}நிலை விவரங்கள்{% else %}Status Details{% endif %}</h4>
 
         <form action="/dashboard" method="GET" class="row g-3 align-items-end">
             <div class="col-md-2">
-                <label class="form-label fw-bold">Status</label>
+                <label class="form-label fw-bold">{% if current_lang == "ta" %}நிலை{% else %}Status{% endif %}</label>
                 <select name="status" class="form-control">
-                    <option value="total" {% if selected_status=='total' %}selected{% endif %}>Total Complaints</option>
-                    <option value="open" {% if selected_status=='open' %}selected{% endif %}>Open Complaints</option>
-                    <option value="in_progress" {% if selected_status=='in_progress' %}selected{% endif %}>In Progress Complaints</option>
-                    <option value="resolved" {% if selected_status=='resolved' %}selected{% endif %}>Resolved Complaints</option>
+                    <option value="total" {% if selected_status=='total' %}selected{% endif %}>{% if current_lang == "ta" %}மொத்த புகார்கள்{% else %}Total Complaints{% endif %}</option>
+                    <option value="open" {% if selected_status=='open' %}selected{% endif %}>{% if current_lang == "ta" %}நிலுவை புகார்கள்{% else %}Open Complaints{% endif %}</option>
+                    <option value="in_progress" {% if selected_status=='in_progress' %}selected{% endif %}>{% if current_lang == "ta" %}செயல்பாட்டில் உள்ள புகார்கள்{% else %}In Progress Complaints{% endif %}</option>
+                    <option value="resolved" {% if selected_status=='resolved' %}selected{% endif %}>{% if current_lang == "ta" %}தீர்வு செய்யப்பட்ட புகார்கள்{% else %}Resolved Complaints{% endif %}</option>
                 </select>
             </div>
 
             <div class="col-md-2">
-                <label class="form-label fw-bold">Search</label>
+                <label class="form-label fw-bold">{% if current_lang == "ta" %}தேடல்{% else %}Search{% endif %}</label>
                 <input type="text" name="keyword" class="form-control"
-                       placeholder="Complaint No / Name / Mobile / Remarks"
+                       placeholder="{% if current_lang == 'ta' %}புகார் எண் / பெயர் / மொபைல் / குறிப்புகள்{% else %}Complaint No / Name / Mobile / Remarks{% endif %}"
                        value="{{ keyword }}">
             </div>
 
             <div class="col-md-2">
-                <label class="form-label fw-bold">From Date</label>
+                <label class="form-label fw-bold">{% if current_lang == "ta" %}தொடக்க தேதி{% else %}From Date{% endif %}</label>
                 <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
             </div>
 
             <div class="col-md-2">
-                <label class="form-label fw-bold">To Date</label>
+                <label class="form-label fw-bold">{% if current_lang == "ta" %}முடிவு தேதி{% else %}To Date{% endif %}</label>
                 <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
             </div>
 
             <div class="col-md-2">
-                <label class="form-label fw-bold">Ward</label>
+                <label class="form-label fw-bold">{% if current_lang == "ta" %}வார்டு{% else %}Ward{% endif %}</label>
                 <select name="ward" class="form-control">
-                    <option value="">All Wards</option>
+                    <option value="">{% if current_lang == "ta" %}அனைத்து வார்டுகள்{% else %}All Wards{% endif %}</option>
                     {% for ward_row in wards %}
                     <option value="{{ ward_row['ward_no'] }}" {% if selected_ward == ward_row['ward_no'] %}selected{% endif %}>
                         {{ ward_row['ward_no'] }}
@@ -239,9 +244,9 @@
             </div>
 
             <div class="col-md-2">
-                <label class="form-label fw-bold">Zonal Office</label>
+                <label class="form-label fw-bold">{% if current_lang == "ta" %}மண்டல அலுவலகம்{% else %}Zonal Office{% endif %}</label>
                 <select name="zonal_office" class="form-control">
-                    <option value="">All Zones</option>
+                    <option value="">{% if current_lang == "ta" %}அனைத்து மண்டலங்கள்{% else %}All Zones{% endif %}</option>
                     {% for zone in zones %}
                     <option value="{{ zone['zonal_office'] }}" {% if selected_zone==zone['zonal_office'] %}selected{% endif %}>
                         {{ zone['zonal_office'] }}
@@ -251,9 +256,9 @@
             </div>
 
             <div class="col-md-2">
-                <label class="form-label fw-bold">Category</label>
+                <label class="form-label fw-bold">{% if current_lang == "ta" %}பிரிவு{% else %}Category{% endif %}</label>
                 <select name="category" class="form-control">
-                    <option value="">All Categories</option>
+                    <option value="">{% if current_lang == "ta" %}அனைத்து பிரிவுகள்{% else %}All Categories{% endif %}</option>
                     {% for category_row in categories %}
                     <option value="{{ category_row['category'] }}" {% if selected_category == category_row['category'] %}selected{% endif %}>
                         {{ category_row['category'] }}
@@ -263,11 +268,11 @@
             </div>
 
             <div class="col-md-3 d-flex gap-2 flex-wrap">
-                <button type="submit" class="btn btn-primary flex-fill">Fetch Details</button>
+                <button type="submit" class="btn btn-primary flex-fill">{% if current_lang == "ta" %}விவரங்களை பெற{% else %}Fetch Details{% endif %}</button>
                 <button type="submit" formaction="/export_status_details" class="btn btn-success flex-fill">
                     Export Excel
                 </button>
-                <a href="/dashboard" class="btn btn-secondary flex-fill">Clear</a>
+                <a href="/dashboard" class="btn btn-secondary flex-fill">{% if current_lang == "ta" %}அழிக்க{% else %}Clear{% endif %}</a>
             </div>
         </form>
 
@@ -282,23 +287,23 @@
 
     <div class="details-card">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-            <h4 class="dashboard-title mb-0">Complaint Status Details</h4>
-            <a href="/" class="btn btn-secondary">Back</a>
+            <h4 class="dashboard-title mb-0">{% if current_lang == "ta" %}புகார் நிலை விவரங்கள்{% else %}Complaint Status Details{% endif %}</h4>
+            <a href="/" class="btn btn-secondary">{% if current_lang == "ta" %}திரும்ப{% else %}Back{% endif %}</a>
         </div>
 
         <div class="table-container">
             <table class="table table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>S.No</th>
-                        <th>Date</th>
-                        <th>Ward</th>
-                        <th>Zonal Office</th>
-                        <th>Category</th>
-                        <th class="progress-column">Progress</th>
-                        <th>Final Resolution Status</th>
-                        <th>Remarks & Comments</th>
-                        <th>More Details</th>
+                        <th>{% if current_lang == "ta" %}வரிசை எண்{% else %}S.No{% endif %}</th>
+                        <th>{% if current_lang == "ta" %}தேதி{% else %}Date{% endif %}</th>
+                        <th>{% if current_lang == "ta" %}வார்டு{% else %}Ward{% endif %}</th>
+                        <th>{% if current_lang == "ta" %}மண்டல அலுவலகம்{% else %}Zonal Office{% endif %}</th>
+                        <th>{% if current_lang == "ta" %}பிரிவு{% else %}Category{% endif %}</th>
+                        <th class="progress-column">{% if current_lang == "ta" %}முன்னேற்றம்{% else %}Progress{% endif %}</th>
+                        <th>{% if current_lang == "ta" %}இறுதி தீர்வு நிலை{% else %}Final Resolution Status{% endif %}</th>
+                        <th>{% if current_lang == "ta" %}குறிப்புகள் & கருத்துகள்{% else %}Remarks & Comments{% endif %}</th>
+                        <th>{% if current_lang == "ta" %}மேலும் விவரங்கள்{% else %}More Details{% endif %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -334,7 +339,7 @@
                         <div class="modal-dialog modal-lg modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header" style="background:#7a0019;color:white;">
-                                    <h5 class="modal-title">Complaint Full Details</h5>
+                                    <h5 class="modal-title">{% if current_lang == "ta" %}முழு புகார் விவரங்கள்{% else %}Complaint Full Details{% endif %}</h5>
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
@@ -381,8 +386,8 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <a href="/edit/{{ row['id'] }}" class="btn btn-warning">Edit Complaint</a>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <a href="/edit/{{ row['id'] }}" class="btn btn-warning">{% if current_lang == "ta" %}புகார் திருத்து{% else %}Edit Complaint{% endif %}</a>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% if current_lang == "ta" %}மூடு{% else %}Close{% endif %}</button>
                                 </div>
                             </div>
                         </div>
