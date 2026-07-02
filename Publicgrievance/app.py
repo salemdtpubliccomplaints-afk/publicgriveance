@@ -901,71 +901,78 @@ def export():
 
     conn = get_db()
 
-    if is_admin():
-        query = """
-        SELECT
-            id AS 'ID',
-            complaint_attender AS 'Complaint Attender',
-            complaint_date AS 'Complaint Date',
-            zonal_office AS 'Zonal Office',
-            petitioner_name AS 'Petitioner Name',
-            mobile AS 'Mobile',
-            petitioner_address AS 'Petitioner Address',
-            ward_no AS 'Ward No',
-            category AS 'Category',
-            description AS 'Description',
-            ward_notification_status AS 'Ward Notification Status',
-            ward_representative AS 'Ward Representative',
-            response_details AS 'Response Details',
-            before_photo AS 'Before Action Photo',
-            informed_to_department AS 'Informed To Department',
-            inital_action_status AS 'Initial Action Status',
-            progress_update_status AS 'Progress Update Status',
-            final_resolution_status AS 'Final Resolution Status',
-            after_photo AS 'After Resolution Photo',
-            remarks_and_notes AS 'Remarks And Notes',
-            status AS 'Status'
-        FROM complaints
-        ORDER BY id DESC
-        """
-    else:
-        query = """
-        SELECT
-            id AS 'ID',
-            complaint_attender AS 'Complaint Attender',
-            complaint_date AS 'Complaint Date',
-            zonal_office AS 'Zonal Office',
-            petitioner_name AS 'Petitioner Name',
-            mobile AS 'Mobile',
-            petitioner_address AS 'Petitioner Address',
-            ward_no AS 'Ward No',
-            category AS 'Category',
-            description AS 'Description',
-            ward_notification_status AS 'Ward Notification Status',
-            ward_representative AS 'Ward Representative',
-            response_details AS 'Response Details',
-            before_photo AS 'Before Action Photo',
-            status AS 'Status'
-        FROM complaints
-        ORDER BY id DESC
-        """
+    try:
+        if is_admin():
+            query = """
+            SELECT
+                id AS "ID",
+                complaint_attender AS "Complaint Attender",
+                complaint_date AS "Complaint Date",
+                zonal_office AS "Zonal Office",
+                petitioner_name AS "Petitioner Name",
+                mobile AS "Mobile",
+                petitioner_address AS "Petitioner Address",
+                ward_no AS "Ward No",
+                category AS "Category",
+                description AS "Description",
+                ward_notification_status AS "Ward Notification Status",
+                ward_representative AS "Ward Representative",
+                response_details AS "Response Details",
+                before_photo AS "Before Action Photo",
+                informed_to_department AS "Informed To Department",
+                inital_action_status AS "Initial Action Status",
+                progress_update_status AS "Progress Update Status",
+                final_resolution_status AS "Final Resolution Status",
+                after_photo AS "After Resolution Photo",
+                remarks_and_notes AS "Remarks And Notes",
+                status AS "Status"
+            FROM complaints
+            ORDER BY id DESC
+            """
+        else:
+            query = """
+            SELECT
+                id AS "ID",
+                complaint_attender AS "Complaint Attender",
+                complaint_date AS "Complaint Date",
+                zonal_office AS "Zonal Office",
+                petitioner_name AS "Petitioner Name",
+                mobile AS "Mobile",
+                petitioner_address AS "Petitioner Address",
+                ward_no AS "Ward No",
+                category AS "Category",
+                description AS "Description",
+                ward_notification_status AS "Ward Notification Status",
+                ward_representative AS "Ward Representative",
+                response_details AS "Response Details",
+                before_photo AS "Before Action Photo",
+                status AS "Status"
+            FROM complaints
+            ORDER BY id DESC
+            """
 
-    df = pd.read_sql_query(query, conn.raw)
-    conn.close()
+        cur = conn.execute(query)
+        rows = cur.fetchall()
+        columns = [desc[0] for desc in cur.description]
 
-    output = io.BytesIO()
+        df = pd.DataFrame(rows, columns=columns)
 
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="Complaints")
+        output = io.BytesIO()
 
-    output.seek(0)
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Complaints")
 
-    return send_file(
-        output,
-        as_attachment=True,
-        download_name="complaints.xlsx",
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="complaints.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    finally:
+        conn.close()
 
 
 @app.route("/storage-test")
