@@ -70,6 +70,7 @@ def initialize_database():
     conn.execute("""
     CREATE TABLE IF NOT EXISTS complaints(
         id SERIAL PRIMARY KEY,
+        complaint_no TEXT UNIQUE,
         complaint_attender TEXT,
         complaint_date TEXT,
         zonal_office TEXT,
@@ -91,6 +92,18 @@ def initialize_database():
         after_photo TEXT,
         status TEXT DEFAULT 'Open'
     )
+    """)
+
+
+    conn.execute("""
+    ALTER TABLE complaints
+    ADD COLUMN IF NOT EXISTS complaint_no TEXT UNIQUE
+    """)
+
+    conn.execute("""
+    UPDATE complaints
+    SET complaint_no = 'SS-' || EXTRACT(YEAR FROM CURRENT_DATE)::INT || '-' || LPAD(id::TEXT, 6, '0')
+    WHERE complaint_no IS NULL OR complaint_no = ''
     """)
 
     conn.execute("""
@@ -119,6 +132,43 @@ def initialize_database():
 
     conn.commit()
     conn.close()
+
+
+
+def generate_complaint_no(conn):
+    """
+    Generate complaint number in SS-YYYY-000001 format.
+    Sequence resets by year based on existing complaint_no values.
+    """
+    year = request.form.get("complaint_date", "")[:4]
+    if not year:
+        from datetime import datetime
+        year = datetime.now().strftime("%Y")
+
+    prefix = f"SS-{year}-"
+
+    cur = conn.execute(
+        """
+        SELECT complaint_no
+        FROM complaints
+        WHERE complaint_no LIKE ?
+        ORDER BY complaint_no DESC
+        LIMIT 1
+        """,
+        (prefix + "%",)
+    )
+
+    row = cur.fetchone()
+
+    if row and row["complaint_no"]:
+        try:
+            last_number = int(row["complaint_no"].split("-")[-1])
+        except Exception:
+            last_number = 0
+    else:
+        last_number = 0
+
+    return f"{prefix}{last_number + 1:06d}"
 
 
 def save_uploaded_file(file_object, prefix):
@@ -204,7 +254,8 @@ def build_status_filter_query():
 
     if keyword:
         where_clauses.append("""
-            (petitioner_name LIKE ?
+            (complaint_no LIKE ?
+             OR petitioner_name LIKE ?
              OR mobile LIKE ?
              OR ward_no LIKE ?
              OR category LIKE ?
@@ -214,7 +265,7 @@ def build_status_filter_query():
              OR remarks_and_notes LIKE ?)
         """)
         search_value = f"%{keyword}%"
-        params.extend([search_value] * 8)
+        params.extend([search_value] * 9)
 
     if ward:
         where_clauses.append("ward_no = ?")
@@ -364,7 +415,8 @@ def dashboard():
 
     if keyword:
         where_clauses.append("""
-            (petitioner_name LIKE ?
+            (complaint_no LIKE ?
+             OR petitioner_name LIKE ?
              OR mobile LIKE ?
              OR ward_no LIKE ?
              OR category LIKE ?
@@ -374,7 +426,7 @@ def dashboard():
              OR remarks_and_notes LIKE ?)
         """)
         search_value = f"%{keyword}%"
-        params.extend([search_value] * 8)
+        params.extend([search_value] * 9)
 
     if ward:
         where_clauses.append("ward_no = ?")
@@ -404,6 +456,7 @@ def dashboard():
         f"""
         SELECT
             id,
+            complaint_no,
             complaint_date,
             zonal_office,
             petitioner_name,
@@ -484,13 +537,15 @@ def search():
         """
         SELECT *
         FROM complaints
-        WHERE petitioner_name LIKE ?
+        WHERE complaint_no LIKE ?
+        OR petitioner_name LIKE ?
         OR mobile LIKE ?
         OR ward_no LIKE ?
         OR category LIKE ?
         OR zonal_office LIKE ?
         """,
         (
+            f"%{keyword}%",
             f"%{keyword}%",
             f"%{keyword}%",
             f"%{keyword}%",
@@ -541,11 +596,13 @@ def save():
         remarks_and_notes = request.form.get("remarks_and_notes", "")
 
     conn = get_db()
+    complaint_no = generate_complaint_no(conn)
 
     conn.execute(
         """
         INSERT INTO complaints
         (
+            complaint_no,
             complaint_attender,
             complaint_date,
             zonal_office,
@@ -567,9 +624,10 @@ def save():
             after_photo,
             status
         )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
+            complaint_no,
             request.form.get("complaint_attender", ""),
             request.form.get("complaint_date", ""),
             request.form.get("zonal_office", ""),
@@ -851,6 +909,7 @@ def export_status_details():
 
     query = f"""
         SELECT
+            complaint_no AS "Complaint No",
             complaint_date AS "Complaint Date",
             ward_no AS "Ward No",
             zonal_office AS "Zonal Office",
@@ -905,7 +964,8 @@ def export():
         if is_admin():
             query = """
             SELECT
-                id AS "ID",
+                complaint_no AS "Complaint No",
+                id AS "Internal ID",
                 complaint_attender AS "Complaint Attender",
                 complaint_date AS "Complaint Date",
                 zonal_office AS "Zonal Office",
@@ -932,7 +992,8 @@ def export():
         else:
             query = """
             SELECT
-                id AS "ID",
+                complaint_no AS "Complaint No",
+                id AS "Internal ID",
                 complaint_attender AS "Complaint Attender",
                 complaint_date AS "Complaint Date",
                 zonal_office AS "Zonal Office",

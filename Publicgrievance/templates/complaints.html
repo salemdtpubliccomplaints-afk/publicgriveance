@@ -200,7 +200,7 @@
         <form action="/search">
             <div class="row g-2 align-items-center">
                 <div class="col-md-6">
-                    <input class="form-control" name="keyword" placeholder="Search by Petitioner Name / Mobile / Ward No / Category / Zonal Office">
+                    <input class="form-control" name="keyword" placeholder="Search by Complaint No / Petitioner Name / Mobile / Ward No / Category / Zonal Office">
                 </div>
                 <div class="col-md-2">
                     <button class="btn btn-info w-100">🔍 Search</button>
@@ -216,7 +216,7 @@
         <table class="table table-bordered table-hover table-sm">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>Complaint No</th>
                     <th>Complaint Attender</th>
                     <th>Date</th>
                     <th>Zonal Office</th>
@@ -248,7 +248,7 @@
             <tbody>
                 {% for row in complaints %}
                 <tr>
-                    <td>{{ row.id }}</td>
+                    <td>{{ row.complaint_no or row.id }}</td>
                     <td>{{ row.complaint_attender }}</td>
                     <td>{{ row.complaint_date }}</td>
                     <td>{{ row.zonal_office }}</td>
@@ -263,15 +263,15 @@
                     <td>{{ row.response_details }}</td>
 
                     <td>
-{% if row.after_photo %}
-    {% if row.after_photo.startswith('http') %}
-        <a href="{{ row.after_photo }}" target="_blank">View</a>
-    {% else %}
-        <a href="{{ url_for('static', filename=row.after_photo) }}" target="_blank">View</a>
-    {% endif %}
-{% else %}
-    No Photo
-{% endif %}
+                        {% if row.after_photo %}
+                            {% if row.after_photo.startswith('http') %}
+                                <a href="{{ row.after_photo }}" target="_blank">View</a>
+                            {% else %}
+                                <a href="{{ url_for('static', filename=row.after_photo) }}" target="_blank">View</a>
+                            {% endif %}
+                        {% else %}
+                            No Photo
+                        {% endif %}
                     </td>
 
                     {% if session.get('role') == 'Admin' %}

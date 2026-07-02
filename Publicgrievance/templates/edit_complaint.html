@@ -187,6 +187,9 @@
             <div>
                 <h2 class="page-title mb-0">Edit Complaint</h2>
                 <small class="text-muted">Update grievance details</small>
+                <div class="mt-1">
+                    <strong>Complaint No:</strong> {{ row['complaint_no'] or row['id'] }}
+                </div>
             </div>
             <a href="/" class="btn btn-secondary">← Back</a>
         </div>
