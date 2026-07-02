@@ -287,6 +287,7 @@
             <table class="table table-bordered table-hover">
                 <thead>
                     <tr>
+                        <th>S.No</th>
                         <th>Date</th>
                         <th>Ward</th>
                         <th>Zonal Office</th>
@@ -301,6 +302,7 @@
                     {% for row in complaints %}
                     {% set final_status = row['final_resolution_status'] or 'Open' %}
                     <tr class="{% if final_status == 'In Progress' %}status-progress-row{% elif final_status == 'Resolved' or final_status == 'Closed' %}status-resolved-row{% else %}status-open-row{% endif %}">
+                        <td class="text-center">{{ loop.index }}</td>
                         <td>{{ row['complaint_date'] }}</td>
                         <td class="text-center">{{ row['ward_no'] }}</td>
                         <td>{{ row['zonal_office'] }}</td>
@@ -384,7 +386,7 @@
                     </div>
                     {% else %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
+                        <td colspan="9" class="text-center text-muted py-4">
                             No complaints found for the selected status/filter.
                         </td>
                     </tr>
