@@ -278,7 +278,15 @@
                             <label>Before Action Photo</label>
                             <input type="file" name="before_photo" class="form-control" accept="image/*">
                             {% if row['before_photo'] %}
-                            <a class="photo-link" href="{{ url_for('static', filename=row['before_photo']) }}" target="_blank">View Existing Before Photo</a>
+                            {% if row['before_photo'].startswith('http') %}
+    <a class="photo-link" href="{{ row['before_photo'] }}" target="_blank">
+        View Existing Before Photo
+    </a>
+{% else %}
+    <a class="photo-link" href="{{ url_for('static', filename=row['before_photo']) }}" target="_blank">
+        View Existing Before Photo
+    </a>
+{% endif %}
                             {% endif %}
                         </div>
 
@@ -287,7 +295,15 @@
                             <label>After Resolution Photo</label>
                             <input type="file" name="after_photo" class="form-control" accept="image/*">
                             {% if row['after_photo'] %}
-                            <a class="photo-link" href="{{ url_for('static', filename=row['after_photo']) }}" target="_blank">View Existing After Photo</a>
+                           {% if row['after_photo'].startswith('http') %}
+    <a class="photo-link" href="{{ row['after_photo'] }}" target="_blank">
+        View Existing After Photo
+    </a>
+{% else %}
+    <a class="photo-link" href="{{ url_for('static', filename=row['after_photo']) }}" target="_blank">
+        View Existing After Photo
+    </a>
+{% endif %}
                             {% endif %}
                         </div>
                         {% endif %}

@@ -356,13 +356,29 @@
                                         {% if row['before_photo'] %}
                                         <div class="col-md-6">
                                             <strong>Before Photo:</strong><br>
-                                            <a href="{{ url_for('static', filename=row['before_photo']) }}" target="_blank">View Before Photo</a>
+                                            {% if row['before_photo'].startswith('http') %}
+    <a href="{{ row['before_photo'] }}" target="_blank">
+        View Before Photo
+    </a>
+{% else %}
+    <a href="{{ url_for('static', filename=row['before_photo']) }}" target="_blank">
+        View Before Photo
+    </a>
+{% endif %}
                                         </div>
                                         {% endif %}
                                         {% if row['after_photo'] %}
                                         <div class="col-md-6">
                                             <strong>After Photo:</strong><br>
-                                            <a href="{{ url_for('static', filename=row['after_photo']) }}" target="_blank">View After Photo</a>
+                                           {% if row['after_photo'].startswith('http') %}
+    <a href="{{ row['before_photo'] }}" target="_blank">
+        View After Photo
+    </a>
+{% else %}
+    <a href="{{ url_for('static', filename=row['before_photo']) }}" target="_blank">
+        View After Photo
+    </a>
+{% endif %}
                                         </div>
                                         {% endif %}
                                     </div>
