@@ -1,8 +1,11 @@
 import os
 import io
+import uuid
+import mimetypes
 import psycopg2
 from psycopg2.extras import DictCursor
 import pandas as pd
+import requests
 
 from flask import Flask, render_template, request, redirect, session, send_file
 from werkzeug.utils import secure_filename
@@ -11,6 +14,10 @@ app = Flask(__name__)
 app.secret_key = "grievance_secret"
 
 UPLOAD_FOLDER = os.path.join("static", "uploads")
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+SUPABASE_STORAGE_BUCKET = os.environ.get("SUPABASE_STORAGE_BUCKET", "complaint-photos")
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -115,16 +122,57 @@ def initialize_database():
 
 
 def save_uploaded_file(file_object, prefix):
+    """
+    Upload complaint photos to Supabase Storage and return the public URL.
+
+    Required Render Environment Variables:
+    - SUPABASE_URL
+    - SUPABASE_SERVICE_ROLE_KEY
+    - SUPABASE_STORAGE_BUCKET
+
+    Bucket should be public in Supabase Storage.
+    """
     if not file_object or not file_object.filename:
         return ""
 
-    filename = secure_filename(file_object.filename)
-    filename = f"{prefix}_{filename}"
+    original_filename = secure_filename(file_object.filename)
+    if not original_filename:
+        return ""
 
-    save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file_object.save(save_path)
+    file_ext = os.path.splitext(original_filename)[1].lower()
+    unique_filename = f"{prefix}_{uuid.uuid4().hex}{file_ext}"
+    object_path = f"complaints/{unique_filename}"
 
-    return "uploads/" + filename
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+        save_path = os.path.join(app.config["UPLOAD_FOLDER"], unique_filename)
+        file_object.save(save_path)
+        return "uploads/" + unique_filename
+
+    content_type = file_object.mimetype
+    if not content_type:
+        content_type = mimetypes.guess_type(original_filename)[0] or "application/octet-stream"
+
+    upload_url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_STORAGE_BUCKET}/{object_path}"
+
+    file_object.stream.seek(0)
+    file_bytes = file_object.read()
+
+    headers = {
+        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+        "Content-Type": content_type,
+        "x-upsert": "true"
+    }
+
+    response = requests.post(upload_url, headers=headers, data=file_bytes, timeout=60)
+
+    if response.status_code not in (200, 201):
+        raise RuntimeError(
+            f"Supabase photo upload failed: {response.status_code} - {response.text}"
+        )
+
+    public_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/{object_path}"
+    return public_url
 
 
 def is_admin():
@@ -302,6 +350,8 @@ def dashboard():
             progress_update_status,
             final_resolution_status,
             remarks_and_notes,
+            before_photo,
+            after_photo,
             status
         FROM complaints
         {where_sql}
@@ -681,6 +731,34 @@ def delete(id):
     return redirect("/")
 
 
+@app.route("/photo-link/<int:id>/<photo_type>")
+def photo_link(id, photo_type):
+    if "user" not in session:
+        return redirect("/login_page")
+
+    if photo_type not in ("before", "after"):
+        return "Invalid photo type", 400
+
+    column_name = "before_photo" if photo_type == "before" else "after_photo"
+
+    conn = get_db()
+    row = conn.execute(
+        f"SELECT {column_name} FROM complaints WHERE id=?",
+        (id,)
+    ).fetchone()
+    conn.close()
+
+    if not row or not row[column_name]:
+        return "Photo not available", 404
+
+    photo_path = row[column_name]
+
+    if photo_path.startswith("http://") or photo_path.startswith("https://"):
+        return redirect(photo_path)
+
+    return redirect("/static/" + photo_path)
+
+
 @app.route("/export")
 def export():
     if "user" not in session:
@@ -753,6 +831,15 @@ def export():
         download_name="complaints.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+
+@app.route("/storage-test")
+def storage_test():
+    if not SUPABASE_URL:
+        return "SUPABASE_URL is missing"
+    if not SUPABASE_SERVICE_ROLE_KEY:
+        return "SUPABASE_SERVICE_ROLE_KEY is missing"
+    return f"Supabase Storage configured. Bucket: {SUPABASE_STORAGE_BUCKET}"
 
 
 @app.route("/db-test")

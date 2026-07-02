@@ -4,3 +4,4 @@ pandas
 openpyxl
 Werkzeug
 psycopg2-binary
+requests
