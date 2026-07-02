@@ -159,6 +159,12 @@
             .header-title { font-size: 21px; }
             .header-subtitle { font-size: 13px; }
         }
+    
+        .required-star {
+            color: red;
+            font-weight: bold;
+        }
+
     </style>
 
 </head>
@@ -206,12 +212,12 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label>{% if current_lang == "ta" %}புகார் பெறுபவர்{% else %}Complaint Attender{% endif %}</label>
-                            <input type="text" name="complaint_attender" class="form-control" value="{{ row['complaint_attender'] }}">
+                            <label>{% if current_lang == "ta" %}புகார் பெறுபவர்{% else %}Complaint Attender{% endif %} <span class="required-star">*</span></label>
+                            <input type="text" name="complaint_attender" class="form-control" value="{{ row['complaint_attender'] }}" required>
                         </div>
                         <div class="col-md-4">
-                            <label>{% if current_lang == "ta" %}புகார் தேதி{% else %}Complaint Date{% endif %}</label>
-                            <input type="date" name="complaint_date" class="form-control" value="{{ row['complaint_date'] }}">
+                            <label>{% if current_lang == "ta" %}புகார் தேதி{% else %}Complaint Date{% endif %} <span class="required-star">*</span></label>
+                            <input type="date" name="complaint_date" class="form-control" value="{{ row['complaint_date'] }}" required>
                         </div>
                         <div class="col-md-4">
                             <label>{% if current_lang == "ta" %}மண்டல அலுவலகம்{% else %}Zonal Office{% endif %}</label>
@@ -238,16 +244,22 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label>{% if current_lang == "ta" %}மனுதாரர் பெயர்{% else %}Petitioner Name{% endif %}</label>
-                            <input type="text" name="petitioner_name" class="form-control" value="{{ row['petitioner_name'] }}">
+                            <label>{% if current_lang == "ta" %}மனுதாரர் பெயர்{% else %}Petitioner Name{% endif %} <span class="required-star">*</span></label>
+                            <input type="text" name="petitioner_name" class="form-control" value="{{ row['petitioner_name'] }}" required>
                         </div>
                         <div class="col-md-6">
-                            <label>{% if current_lang == "ta" %}மொபைல் எண்{% else %}Mobile Number{% endif %}</label>
-                            <input type="text" name="mobile" class="form-control" value="{{ row['mobile'] }}">
+                            <label>{% if current_lang == "ta" %}மொபைல் எண்{% else %}Mobile Number{% endif %} <span class="required-star">*</span></label>
+                            <input type="tel" name="mobile" class="form-control" value="{{ row['mobile'] }}"
+                                   maxlength="10" minlength="10"
+                                   pattern="[0-9]{10}"
+                                   inputmode="numeric"
+                                   oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
+                                   title="Please enter a valid 10-digit mobile number"
+                                   required>
                         </div>
                         <div class="col-md-12">
-                            <label>{% if current_lang == "ta" %}மனுதாரர் முகவரி{% else %}Petitioner Address{% endif %}</label>
-                            <textarea name="petitioner_address" class="form-control" rows="3">{{ row['petitioner_address'] }}</textarea>
+                            <label>{% if current_lang == "ta" %}மனுதாரர் முகவரி{% else %}Petitioner Address{% endif %} <span class="required-star">*</span></label>
+                            <textarea name="petitioner_address" class="form-control" rows="3" required>{{ row['petitioner_address'] }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -258,8 +270,8 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label>{% if current_lang == "ta" %}பிரிவு{% else %}Category{% endif %}</label>
-                            <select name="category" class="form-control">
+                            <label>{% if current_lang == "ta" %}பிரிவு{% else %}Category{% endif %} <span class="required-star">*</span></label>
+                            <select name="category" class="form-control" required>
                                 <option value="">-- Select Category --</option>
                                 {% for option in [
                                     "New Road", "Road Patch Work", "Road Corner Safety Wall",

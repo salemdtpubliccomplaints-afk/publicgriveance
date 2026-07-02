@@ -294,6 +294,31 @@ def build_status_filter_query():
     return selected_status, keyword, ward, category, zonal_office, from_date, to_date, where_sql, params
 
 
+
+def validate_required_complaint_fields():
+    required_fields = {
+        "Complaint Attender": request.form.get("complaint_attender", "").strip(),
+        "Complaint Date": request.form.get("complaint_date", "").strip(),
+        "Petitioner Name": request.form.get("petitioner_name", "").strip(),
+        "Mobile Number": request.form.get("mobile", "").strip(),
+        "Petitioner Address": request.form.get("petitioner_address", "").strip(),
+        "Category": request.form.get("category", "").strip(),
+    }
+
+    missing = [name for name, value in required_fields.items() if not value]
+
+    if missing:
+        return "Please fill in the mandatory fields: " + ", ".join(missing)
+
+    mobile = request.form.get("mobile", "").strip()
+
+    if not mobile.isdigit() or len(mobile) != 10:
+        return "Mobile Number must contain exactly 10 digits."
+
+    return None
+
+
+
 def is_admin():
     return session.get("role") == "Admin"
 
@@ -588,6 +613,10 @@ def save():
     if "user" not in session:
         return redirect("/login_page")
 
+    validation_error = validate_required_complaint_fields()
+    if validation_error:
+        return validation_error
+
     before_photo_path = save_uploaded_file(
         request.files.get("before_photo"),
         "before"
@@ -698,6 +727,10 @@ def edit(id):
 def update(id):
     if "user" not in session:
         return redirect("/login_page")
+
+    validation_error = validate_required_complaint_fields()
+    if validation_error:
+        return validation_error
 
     conn = get_db()
 

@@ -7,7 +7,7 @@
     <style>
 .banner-container{
     width:100%;
-    text-align:center;a
+    text-align:center;
     background:#fff;
     padding:0;
     margin:0;
@@ -159,6 +159,12 @@
             .header-title { font-size: 21px; }
             .header-subtitle { font-size: 13px; }
         }
+    
+        .required-star {
+            color: red;
+            font-weight: bold;
+        }
+
     </style>
 
 </head>
@@ -198,11 +204,11 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label>Complaint Attender</label>
+                            <label>Complaint Attender <span class="required-star">*</span></label>
                             <input type="text" name="complaint_attender" class="form-control" required>
                         </div>
                         <div class="col-md-4">
-                            <label>Complaint Date</label>
+                            <label>Complaint Date <span class="required-star">*</span></label>
                             <input type="date" name="complaint_date" class="form-control" required>
                         </div>
                         <div class="col-md-4">
@@ -230,16 +236,22 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label>Petitioner Name</label>
+                            <label>Petitioner Name <span class="required-star">*</span></label>
                             <input type="text" name="petitioner_name" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label>Mobile Number</label>
-                            <input type="text" name="mobile" class="form-control">
+                            <label>Mobile Number <span class="required-star">*</span></label>
+                            <input type="tel" name="mobile" class="form-control"
+                                   maxlength="10" minlength="10"
+                                   pattern="[0-9]{10}"
+                                   inputmode="numeric"
+                                   oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
+                                   title="Please enter a valid 10-digit mobile number"
+                                   required>
                         </div>
                         <div class="col-md-12">
-                            <label>Petitioner Address</label>
-                            <textarea name="petitioner_address" class="form-control" rows="3"></textarea>
+                            <label>Petitioner Address <span class="required-star">*</span></label>
+                            <textarea name="petitioner_address" class="form-control" rows="3" required></textarea>
                         </div>
                     </div>
                 </div>
@@ -250,8 +262,8 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label>Category</label>
-                            <select name="category" class="form-control">
+                            <label>Category <span class="required-star">*</span></label>
+                            <select name="category" class="form-control" required>
                                 <option value="">-- Select Category --</option>
                                 <option value="New Road">New Road</option>
                                 <option value="Road Patch Work">Road Patch Work</option>
