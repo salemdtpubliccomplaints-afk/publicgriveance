@@ -175,6 +175,74 @@ def save_uploaded_file(file_object, prefix):
     return public_url
 
 
+def build_status_filter_query():
+    selected_status = request.args.get("status", "total")
+    keyword = request.args.get("keyword", "").strip()
+    ward = request.args.get("ward", "").strip()
+    category = request.args.get("category", "").strip()
+    zonal_office = request.args.get("zonal_office", "").strip()
+    from_date = request.args.get("from_date", "").strip()
+    to_date = request.args.get("to_date", "").strip()
+
+    where_clauses = []
+    params = []
+
+    if selected_status == "open":
+        where_clauses.append("""
+            (final_resolution_status IS NULL
+             OR final_resolution_status=''
+             OR final_resolution_status='Open')
+        """)
+    elif selected_status == "in_progress":
+        where_clauses.append("final_resolution_status='In Progress'")
+    elif selected_status == "resolved":
+        where_clauses.append("""
+            (final_resolution_status='Resolved'
+             OR final_resolution_status='Closed'
+             OR status='Resolved')
+        """)
+
+    if keyword:
+        where_clauses.append("""
+            (petitioner_name LIKE ?
+             OR mobile LIKE ?
+             OR ward_no LIKE ?
+             OR category LIKE ?
+             OR zonal_office LIKE ?
+             OR description LIKE ?
+             OR response_details LIKE ?
+             OR remarks_and_notes LIKE ?)
+        """)
+        search_value = f"%{keyword}%"
+        params.extend([search_value] * 8)
+
+    if ward:
+        where_clauses.append("ward_no = ?")
+        params.append(ward)
+
+    if category:
+        where_clauses.append("category = ?")
+        params.append(category)
+
+    if zonal_office:
+        where_clauses.append("zonal_office = ?")
+        params.append(zonal_office)
+
+    if from_date:
+        where_clauses.append("complaint_date >= ?")
+        params.append(from_date)
+
+    if to_date:
+        where_clauses.append("complaint_date <= ?")
+        params.append(to_date)
+
+    where_sql = ""
+    if where_clauses:
+        where_sql = "WHERE " + " AND ".join(where_clauses)
+
+    return selected_status, keyword, ward, category, zonal_office, from_date, to_date, where_sql, params
+
+
 def is_admin():
     return session.get("role") == "Admin"
 
@@ -757,6 +825,73 @@ def photo_link(id, photo_type):
         return redirect(photo_path)
 
     return redirect("/static/" + photo_path)
+
+
+@app.route("/export_status_details")
+def export_status_details():
+    if "user" not in session:
+        return redirect("/login_page")
+
+    if not is_admin():
+        return redirect("/dashboard")
+
+    (
+        selected_status,
+        keyword,
+        ward,
+        category,
+        zonal_office,
+        from_date,
+        to_date,
+        where_sql,
+        params
+    ) = build_status_filter_query()
+
+    conn = get_db()
+
+    query = f"""
+        SELECT
+            complaint_date AS "Complaint Date",
+            ward_no AS "Ward No",
+            zonal_office AS "Zonal Office",
+            category AS "Category",
+            petitioner_name AS "Petitioner Name",
+            mobile AS "Mobile",
+            description AS "Description",
+            response_details AS "Ward Response",
+            informed_to_department AS "Informed To Department",
+            progress_update_status AS "Progress",
+            final_resolution_status AS "Final Resolution Status",
+            remarks_and_notes AS "Remarks And Comments",
+            before_photo AS "Before Photo",
+            after_photo AS "After Photo",
+            status AS "Status"
+        FROM complaints
+        {where_sql}
+        ORDER BY id DESC
+    """
+
+    df = pd.read_sql_query(query.replace("?", "%s"), conn.raw, params=params)
+    conn.close()
+
+    df.insert(0, "S.No", range(1, len(df) + 1))
+
+    output = io.BytesIO()
+
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Status Details")
+
+    output.seek(0)
+
+    status_name = selected_status.replace("_", "-")
+    filename = f"complaint_status_details_{status_name}.xlsx"
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 
 @app.route("/export")

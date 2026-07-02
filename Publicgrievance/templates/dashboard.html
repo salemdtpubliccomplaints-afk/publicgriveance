@@ -262,9 +262,12 @@
                 </select>
             </div>
 
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100">Fetch Details</button>
-                <a href="/dashboard" class="btn btn-secondary w-100">Clear</a>
+            <div class="col-md-3 d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn btn-primary flex-fill">Fetch Details</button>
+                <button type="submit" formaction="/export_status_details" class="btn btn-success flex-fill">
+                    Export Excel
+                </button>
+                <a href="/dashboard" class="btn btn-secondary flex-fill">Clear</a>
             </div>
         </form>
 
