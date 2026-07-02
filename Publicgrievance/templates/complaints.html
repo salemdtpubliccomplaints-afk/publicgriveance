@@ -263,11 +263,11 @@
                     <td>{{ row.response_details }}</td>
 
                     <td>
-                        {% if row.before_photo %}
-    {% if row.before_photo.startswith('http') %}
-        <a href="{{ row.before_photo }}" target="_blank">View</a>
+{% if row.after_photo %}
+    {% if row.after_photo.startswith('http') %}
+        <a href="{{ row.after_photo }}" target="_blank">View</a>
     {% else %}
-        <a href="{{ url_for('static', filename=row.before_photo) }}" target="_blank">View</a>
+        <a href="{{ url_for('static', filename=row.after_photo) }}" target="_blank">View</a>
     {% endif %}
 {% else %}
     No Photo
