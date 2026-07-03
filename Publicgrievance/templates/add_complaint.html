@@ -308,6 +308,13 @@
                             <input type="file" name="before_photo" class="form-control" accept="image/*">
                         </div>
 
+
+                        <div class="col-md-6">
+                            <label>Petitioner Application</label>
+                            <input type="file" name="petitioner_application" class="form-control"
+                                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,image/*">
+                        </div>
+
                         {% if session.get('role') == 'Admin' %}
                         <div class="col-md-6">
                             <label>After Resolution Photo</label>

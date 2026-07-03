@@ -89,6 +89,7 @@ def initialize_database():
         final_resolution_status TEXT,
         remarks_and_notes TEXT,
         before_photo TEXT,
+        petitioner_application TEXT,
         after_photo TEXT,
         status TEXT DEFAULT 'Open'
     )
@@ -104,6 +105,11 @@ def initialize_database():
     UPDATE complaints
     SET complaint_no = 'SS-' || EXTRACT(YEAR FROM CURRENT_DATE)::INT || '-' || LPAD(id::TEXT, 6, '0')
     WHERE complaint_no IS NULL OR complaint_no = ''
+    """)
+
+    conn.execute("""
+    ALTER TABLE complaints
+    ADD COLUMN IF NOT EXISTS petitioner_application TEXT
     """)
 
     conn.execute("""
@@ -513,6 +519,7 @@ def dashboard():
             final_resolution_status,
             remarks_and_notes,
             before_photo,
+            petitioner_application,
             after_photo,
             status
         FROM complaints
@@ -622,6 +629,11 @@ def save():
         "before"
     )
 
+    petitioner_application_path = save_uploaded_file(
+        request.files.get("petitioner_application"),
+        "application"
+    )
+
     after_photo_path = ""
     informed_to_department = ""
     inital_action_status = ""
@@ -666,10 +678,11 @@ def save():
             final_resolution_status,
             remarks_and_notes,
             before_photo,
+            petitioner_application,
             after_photo,
             status
         )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
             complaint_no,
@@ -691,6 +704,7 @@ def save():
             final_resolution_status,
             remarks_and_notes,
             before_photo_path,
+            petitioner_application_path,
             after_photo_path,
             "Open"
         )
@@ -736,7 +750,7 @@ def update(id):
 
     existing_row = conn.execute(
         """
-        SELECT before_photo, after_photo
+        SELECT before_photo, petitioner_application, after_photo
         FROM complaints
         WHERE id=?
         """,
@@ -744,6 +758,7 @@ def update(id):
     ).fetchone()
 
     before_photo_path = existing_row["before_photo"] if existing_row else ""
+    petitioner_application_path = existing_row["petitioner_application"] if existing_row else ""
     after_photo_path = existing_row["after_photo"] if existing_row else ""
 
     new_before_photo = save_uploaded_file(
@@ -753,6 +768,14 @@ def update(id):
 
     if new_before_photo:
         before_photo_path = new_before_photo
+
+    new_petitioner_application = save_uploaded_file(
+        request.files.get("petitioner_application"),
+        "application"
+    )
+
+    if new_petitioner_application:
+        petitioner_application_path = new_petitioner_application
 
     if is_admin():
         new_after_photo = save_uploaded_file(
@@ -785,6 +808,7 @@ def update(id):
                 final_resolution_status=?,
                 remarks_and_notes=?,
                 before_photo=?,
+                petitioner_application=?,
                 after_photo=?
             WHERE id=?
             """,
@@ -807,6 +831,7 @@ def update(id):
                 request.form.get("final_resolution_status", ""),
                 request.form.get("remarks_and_notes", ""),
                 before_photo_path,
+                petitioner_application_path,
                 after_photo_path,
                 id
             )
@@ -829,7 +854,8 @@ def update(id):
                 ward_notification_status=?,
                 ward_representative=?,
                 response_details=?,
-                before_photo=?
+                before_photo=?,
+                petitioner_application=?
             WHERE id=?
             """,
             (
@@ -846,6 +872,7 @@ def update(id):
                 request.form.get("ward_representative", ""),
                 request.form.get("response_details", ""),
                 before_photo_path,
+                petitioner_application_path,
                 id
             )
         )

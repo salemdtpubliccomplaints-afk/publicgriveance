@@ -306,6 +306,20 @@
                             {% endif %}
                         </div>
 
+                        <div class="col-md-6">
+                            <label>{% if current_lang == "ta" %}மனுதாரர் விண்ணப்பம்{% else %}Petitioner Application{% endif %}</label>
+                            <input type="file" name="petitioner_application" class="form-control"
+                                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,image/*">
+                            {% if row['petitioner_application'] %}
+                                {% if row['petitioner_application'].startswith('http') %}
+                                <a class="photo-link" href="{{ row['petitioner_application'] }}" target="_blank">View Existing Petitioner Application</a>
+                                {% else %}
+                                <a class="photo-link" href="{{ url_for('static', filename=row['petitioner_application']) }}" target="_blank">View Existing Petitioner Application</a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+
                         {% if session.get('role') == 'Admin' %}
                         <div class="col-md-6">
                             <label>{% if current_lang == "ta" %}தீர்வுக்குப் பின் புகைப்படம்{% else %}After Resolution Photo{% endif %}</label>

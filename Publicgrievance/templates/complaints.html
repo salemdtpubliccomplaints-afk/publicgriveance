@@ -235,6 +235,7 @@
                     <th>{% if current_lang == "ta" %}பிரதிநிதி{% else %}Representative{% endif %}</th>
                     <th>{% if current_lang == "ta" %}பதில்{% else %}Response{% endif %}</th>
                     <th>{% if current_lang == "ta" %}முன் புகைப்படம்{% else %}Before Photo{% endif %}</th>
+                    <th>{% if current_lang == "ta" %}மனுதாரர் விண்ணப்பம்{% else %}Petitioner Application{% endif %}</th>
 
                     {% if session.get('role') == 'Admin' %}
                     <th>{% if current_lang == "ta" %}துறை{% else %}Department{% endif %}</th>
@@ -276,6 +277,18 @@
                             {% endif %}
                         {% else %}
                             No Photo
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if row.petitioner_application %}
+                            {% if row.petitioner_application.startswith('http') %}
+                            <a href="{{ row.petitioner_application }}" target="_blank">View</a>
+                            {% else %}
+                            <a href="{{ url_for('static', filename=row.petitioner_application) }}" target="_blank">View</a>
+                            {% endif %}
+                        {% else %}
+                        No Application
                         {% endif %}
                     </td>
 

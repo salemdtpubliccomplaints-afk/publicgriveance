@@ -373,7 +373,18 @@
                                             {% endif %}
                                         </div>
                                         {% endif %}
-                                        {% if row['after_photo'] %}
+                                        
+                                        {% if row['petitioner_application'] %}
+                                        <div class="col-md-6">
+                                            <strong>{% if current_lang == "ta" %}மனுதாரர் விண்ணப்பம்{% else %}Petitioner Application{% endif %}:</strong><br>
+                                            {% if row['petitioner_application'].startswith('http') %}
+                                            <a href="{{ row['petitioner_application'] }}" target="_blank" class="btn btn-sm btn-info mt-2">View Application</a>
+                                            {% else %}
+                                            <a href="{{ url_for('static', filename=row['petitioner_application']) }}" target="_blank" class="btn btn-sm btn-info mt-2">View Application</a>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+{% if row['after_photo'] %}
                                         <div class="col-md-6">
                                             <strong>After Photo:</strong><br>
                                            {% if row['after_photo'].startswith('http') %}
