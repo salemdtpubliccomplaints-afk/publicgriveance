@@ -1116,6 +1116,7 @@ def export_status_details():
 
 
 
+
 def export_complaints_by_type(complaint_type="Complaint"):
     if "user" not in session:
         return redirect("/login_page")
@@ -1128,30 +1129,30 @@ def export_complaints_by_type(complaint_type="Complaint"):
     if is_admin():
         query = """
         SELECT
-            id AS 'ID',
-            complaint_no AS 'Complaint No',
-            complaint_attender AS 'Complaint Attender',
-            complaint_date AS 'Complaint Date',
-            zonal_office AS 'Zonal Office',
-            petitioner_name AS 'Petitioner Name',
-            mobile AS 'Mobile',
-            petitioner_address AS 'Petitioner Address',
-            ward_no AS 'Ward No',
-            category AS 'Category',
-            description AS 'Description',
-            ward_notification_status AS 'Ward Notification Status',
-            ward_representative AS 'Ward Representative',
-            response_details AS 'Response Details',
-            before_photo AS 'Before Action Photo',
-            petitioner_application AS 'Petitioner Application',
-            informed_to_department AS 'Informed To Department',
-            inital_action_status AS 'Initial Action Status',
-            progress_update_status AS 'Progress Update Status',
-            final_resolution_status AS 'Final Resolution Status',
-            after_photo AS 'After Resolution Photo',
-            remarks_and_notes AS 'Remarks And Notes',
-            status AS 'Status',
-            complaint_type AS 'Complaint Type'
+            id AS "ID",
+            complaint_no AS "Complaint No",
+            complaint_attender AS "Complaint Attender",
+            complaint_date AS "Complaint Date",
+            zonal_office AS "Zonal Office",
+            petitioner_name AS "Petitioner Name",
+            mobile AS "Mobile",
+            petitioner_address AS "Petitioner Address",
+            ward_no AS "Ward No",
+            category AS "Category",
+            description AS "Description",
+            ward_notification_status AS "Ward Notification Status",
+            ward_representative AS "Ward Representative",
+            response_details AS "Response Details",
+            before_photo AS "Before Action Photo",
+            petitioner_application AS "Petitioner Application",
+            informed_to_department AS "Informed To Department",
+            inital_action_status AS "Initial Action Status",
+            progress_update_status AS "Progress Update Status",
+            final_resolution_status AS "Final Resolution Status",
+            after_photo AS "After Resolution Photo",
+            remarks_and_notes AS "Remarks And Notes",
+            status AS "Status",
+            complaint_type AS "Complaint Type"
         FROM complaints
         WHERE complaint_type=%s
         ORDER BY id DESC
@@ -1159,31 +1160,33 @@ def export_complaints_by_type(complaint_type="Complaint"):
     else:
         query = """
         SELECT
-            id AS 'ID',
-            complaint_no AS 'Complaint No',
-            complaint_attender AS 'Complaint Attender',
-            complaint_date AS 'Complaint Date',
-            zonal_office AS 'Zonal Office',
-            petitioner_name AS 'Petitioner Name',
-            mobile AS 'Mobile',
-            petitioner_address AS 'Petitioner Address',
-            ward_no AS 'Ward No',
-            category AS 'Category',
-            description AS 'Description',
-            ward_notification_status AS 'Ward Notification Status',
-            ward_representative AS 'Ward Representative',
-            response_details AS 'Response Details',
-            before_photo AS 'Before Action Photo',
-            petitioner_application AS 'Petitioner Application',
-            status AS 'Status',
-            complaint_type AS 'Complaint Type'
+            id AS "ID",
+            complaint_no AS "Complaint No",
+            complaint_attender AS "Complaint Attender",
+            complaint_date AS "Complaint Date",
+            zonal_office AS "Zonal Office",
+            petitioner_name AS "Petitioner Name",
+            mobile AS "Mobile",
+            petitioner_address AS "Petitioner Address",
+            ward_no AS "Ward No",
+            category AS "Category",
+            description AS "Description",
+            ward_notification_status AS "Ward Notification Status",
+            ward_representative AS "Ward Representative",
+            response_details AS "Response Details",
+            before_photo AS "Before Action Photo",
+            petitioner_application AS "Petitioner Application",
+            status AS "Status",
+            complaint_type AS "Complaint Type"
         FROM complaints
         WHERE complaint_type=%s
         ORDER BY id DESC
         """
 
-    df = pd.read_sql_query(query, conn.raw, params=(complaint_type,))
-    conn.close()
+    try:
+        df = pd.read_sql_query(query, conn.raw, params=(complaint_type,))
+    finally:
+        conn.close()
 
     output = io.BytesIO()
 
