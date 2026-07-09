@@ -91,7 +91,8 @@ def initialize_database():
         before_photo TEXT,
         petitioner_application TEXT,
         after_photo TEXT,
-        status TEXT DEFAULT 'Open'
+        status TEXT DEFAULT 'Open',
+        complaint_type TEXT DEFAULT 'Complaint'
     )
     """)
 
@@ -110,6 +111,17 @@ def initialize_database():
     conn.execute("""
     ALTER TABLE complaints
     ADD COLUMN IF NOT EXISTS petitioner_application TEXT
+    """)
+
+    conn.execute("""
+    ALTER TABLE complaints
+    ADD COLUMN IF NOT EXISTS complaint_type TEXT DEFAULT 'Complaint'
+    """)
+
+    conn.execute("""
+    UPDATE complaints
+    SET complaint_type='Complaint'
+    WHERE complaint_type IS NULL OR complaint_type=''
     """)
 
     conn.execute("""
@@ -141,17 +153,19 @@ def initialize_database():
 
 
 
-def generate_complaint_no(conn):
+def generate_complaint_no(conn, complaint_type="Complaint"):
     """
-    Generate complaint number in SS-YYYY-000001 format.
-    Sequence resets by year based on existing complaint_no values.
+    Generate complaint number.
+    Normal complaints: SS-YYYY-000001
+    Needs complaints: NEEDS-YYYY-000001
     """
     year = request.form.get("complaint_date", "")[:4]
     if not year:
         from datetime import datetime
         year = datetime.now().strftime("%Y")
 
-    prefix = f"SS-{year}-"
+    prefix = "NEEDS" if complaint_type == "Needs" else "SS"
+    prefix = f"{prefix}-{year}-"
 
     cur = conn.execute(
         """
@@ -301,6 +315,140 @@ def build_status_filter_query():
 
 
 
+def get_dashboard_data(complaint_type="Complaint"):
+    selected_status, keyword, ward, category, zonal_office, from_date, to_date, where_sql, params = build_status_filter_query()
+    complaint_type = request.args.get("complaint_type", "Complaint")
+    if complaint_type not in ("Complaint", "Needs"):
+        complaint_type = "Complaint"
+    if where_sql:
+        where_sql = where_sql + " AND complaint_type = ?"
+    else:
+        where_sql = "WHERE complaint_type = ?"
+    params.append(complaint_type)
+
+    if where_sql:
+        where_sql = where_sql + " AND complaint_type = ?"
+    else:
+        where_sql = "WHERE complaint_type = ?"
+
+    params = params + [complaint_type]
+
+    conn = get_db()
+
+    total = conn.execute(
+        "SELECT COUNT(*) FROM complaints WHERE complaint_type=?",
+        (complaint_type,)
+    ).fetchone()[0]
+
+    open_count = conn.execute("""
+        SELECT COUNT(*)
+        FROM complaints
+        WHERE complaint_type=?
+          AND (
+                final_resolution_status IS NULL
+             OR final_resolution_status=''
+             OR final_resolution_status='Open'
+          )
+    """, (complaint_type,)).fetchone()[0]
+
+    in_progress = conn.execute("""
+        SELECT COUNT(*)
+        FROM complaints
+        WHERE complaint_type=?
+          AND final_resolution_status='In Progress'
+    """, (complaint_type,)).fetchone()[0]
+
+    resolved = conn.execute("""
+        SELECT COUNT(*)
+        FROM complaints
+        WHERE complaint_type=?
+          AND (
+                final_resolution_status='Resolved'
+             OR final_resolution_status='Closed'
+             OR status='Resolved'
+          )
+    """, (complaint_type,)).fetchone()[0]
+
+    complaints = conn.execute(
+        f"""
+        SELECT
+            id,
+            complaint_no,
+            complaint_date,
+            zonal_office,
+            petitioner_name,
+            mobile,
+            ward_no,
+            category,
+            description,
+            ward_notification_status,
+            ward_representative,
+            response_details,
+            informed_to_department,
+            progress_update_status,
+            final_resolution_status,
+            remarks_and_notes,
+            before_photo,
+            petitioner_application,
+            after_photo,
+            status,
+            complaint_type
+        FROM complaints
+        {where_sql}
+        ORDER BY id DESC
+        """,
+        params
+    ).fetchall()
+
+    wards = conn.execute("""
+        SELECT DISTINCT ward_no
+        FROM complaints
+        WHERE complaint_type=?
+          AND ward_no IS NOT NULL AND ward_no != ''
+        ORDER BY ward_no
+    """, (complaint_type,)).fetchall()
+
+    zones = conn.execute("""
+        SELECT DISTINCT zonal_office
+        FROM complaints
+        WHERE complaint_type=?
+          AND zonal_office IS NOT NULL AND zonal_office != ''
+        ORDER BY zonal_office
+    """, (complaint_type,)).fetchall()
+
+    categories = conn.execute("""
+        SELECT DISTINCT category
+        FROM complaints
+        WHERE complaint_type=?
+          AND category IS NOT NULL AND category != ''
+        ORDER BY category
+    """, (complaint_type,)).fetchall()
+
+    conn.close()
+
+    return dict(
+        total=total,
+        open_count=open_count,
+        in_progress=in_progress,
+        resolved=resolved,
+        complaints=complaints,
+        selected_status=selected_status,
+        keyword=keyword,
+        selected_ward=ward,
+        selected_category=category,
+        selected_zone=zonal_office,
+        from_date=from_date,
+        to_date=to_date,
+        wards=wards,
+        zones=zones,
+        categories=categories,
+        complaint_type=complaint_type,
+        dashboard_title="Needs Dashboard" if complaint_type == "Needs" else "Complaint Dashboard",
+        is_needs_dashboard=(complaint_type == "Needs")
+    )
+
+
+
 def validate_required_complaint_fields():
     required_fields = {
         "Complaint Attender": request.form.get("complaint_attender", "").strip(),
@@ -392,6 +540,7 @@ def home():
         """
         SELECT *
         FROM complaints
+        WHERE complaint_type='Complaint' OR complaint_type IS NULL OR complaint_type=''
         ORDER BY id DESC
         """
     ).fetchall()
@@ -406,170 +555,17 @@ def dashboard():
     if "user" not in session:
         return redirect("/login_page")
 
-    selected_status = request.args.get("status", "total")
-    keyword = request.args.get("keyword", "").strip()
-    ward = request.args.get("ward", "").strip()
-    category = request.args.get("category", "").strip()
-    zonal_office = request.args.get("zonal_office", "").strip()
-    from_date = request.args.get("from_date", "").strip()
-    to_date = request.args.get("to_date", "").strip()
+    data = get_dashboard_data("Complaint")
+    return render_template("dashboard.html", **data)
 
-    conn = get_db()
 
-    total = conn.execute(
-        "SELECT COUNT(*) FROM complaints"
-    ).fetchone()[0]
+@app.route("/needs_dashboard")
+def needs_dashboard():
+    if "user" not in session:
+        return redirect("/login_page")
 
-    open_count = conn.execute("""
-        SELECT COUNT(*)
-        FROM complaints
-        WHERE final_resolution_status IS NULL
-           OR final_resolution_status=''
-           OR final_resolution_status='Open'
-    """).fetchone()[0]
-
-    in_progress = conn.execute("""
-        SELECT COUNT(*)
-        FROM complaints
-        WHERE final_resolution_status='In Progress'
-    """).fetchone()[0]
-
-    resolved = conn.execute("""
-        SELECT COUNT(*)
-        FROM complaints
-        WHERE final_resolution_status='Resolved'
-           OR final_resolution_status='Closed'
-           OR status='Resolved'
-    """).fetchone()[0]
-
-    where_clauses = []
-    params = []
-
-    if selected_status == "open":
-        where_clauses.append("""
-            (final_resolution_status IS NULL
-             OR final_resolution_status=''
-             OR final_resolution_status='Open')
-        """)
-    elif selected_status == "in_progress":
-        where_clauses.append("final_resolution_status='In Progress'")
-    elif selected_status == "resolved":
-        where_clauses.append("""
-            (final_resolution_status='Resolved'
-             OR final_resolution_status='Closed'
-             OR status='Resolved')
-        """)
-
-    if keyword:
-        where_clauses.append("""
-            (complaint_no LIKE ?
-             OR petitioner_name LIKE ?
-             OR mobile LIKE ?
-             OR ward_no LIKE ?
-             OR category LIKE ?
-             OR zonal_office LIKE ?
-             OR description LIKE ?
-             OR response_details LIKE ?
-             OR remarks_and_notes LIKE ?)
-        """)
-        search_value = f"%{keyword}%"
-        params.extend([search_value] * 9)
-
-    if ward:
-        where_clauses.append("ward_no = ?")
-        params.append(ward)
-
-    if category:
-        where_clauses.append("category = ?")
-        params.append(category)
-
-    if zonal_office:
-        where_clauses.append("zonal_office = ?")
-        params.append(zonal_office)
-
-    if from_date:
-        where_clauses.append("complaint_date >= ?")
-        params.append(from_date)
-
-    if to_date:
-        where_clauses.append("complaint_date <= ?")
-        params.append(to_date)
-
-    where_sql = ""
-    if where_clauses:
-        where_sql = "WHERE " + " AND ".join(where_clauses)
-
-    complaints = conn.execute(
-        f"""
-        SELECT
-            id,
-            complaint_no,
-            complaint_date,
-            zonal_office,
-            petitioner_name,
-            mobile,
-            ward_no,
-            category,
-            description,
-            ward_notification_status,
-            ward_representative,
-            response_details,
-            informed_to_department,
-            progress_update_status,
-            final_resolution_status,
-            remarks_and_notes,
-            before_photo,
-            petitioner_application,
-            after_photo,
-            status
-        FROM complaints
-        {where_sql}
-        ORDER BY id DESC
-        """,
-        params
-    ).fetchall()
-
-    wards = conn.execute("""
-        SELECT DISTINCT ward_no
-        FROM complaints
-        WHERE ward_no IS NOT NULL AND ward_no != ''
-        ORDER BY ward_no
-    """).fetchall()
-
-    zones = conn.execute("""
-        SELECT DISTINCT zonal_office
-        FROM complaints
-        WHERE zonal_office IS NOT NULL AND zonal_office != ''
-        ORDER BY zonal_office
-    """).fetchall()
-
-    categories = conn.execute("""
-        SELECT DISTINCT category
-        FROM complaints
-        WHERE category IS NOT NULL AND category != ''
-        ORDER BY category
-    """).fetchall()
-
-    conn.close()
-
-    return render_template(
-        "dashboard.html",
-        total=total,
-        open_count=open_count,
-        in_progress=in_progress,
-        resolved=resolved,
-        complaints=complaints,
-        selected_status=selected_status,
-        keyword=keyword,
-        selected_ward=ward,
-        selected_category=category,
-        selected_zone=zonal_office,
-        from_date=from_date,
-        to_date=to_date,
-        wards=wards,
-        zones=zones,
-        categories=categories
-    )
+    data = get_dashboard_data("Needs")
+    return render_template("dashboard.html", **data)
 
 
 @app.route("/search")
@@ -585,12 +581,15 @@ def search():
         """
         SELECT *
         FROM complaints
-        WHERE complaint_no LIKE ?
+        WHERE (complaint_type='Complaint' OR complaint_type IS NULL OR complaint_type='')
+        AND (
+             complaint_no LIKE ?
         OR petitioner_name LIKE ?
         OR mobile LIKE ?
         OR ward_no LIKE ?
         OR category LIKE ?
         OR zonal_office LIKE ?
+        )
         """,
         (
             f"%{keyword}%",
@@ -612,7 +611,15 @@ def add():
     if "user" not in session:
         return redirect("/login_page")
 
-    return render_template("add_complaint.html")
+    return render_template("add_complaint.html", is_needs=False)
+
+
+@app.route("/needs_add")
+def needs_add():
+    if "user" not in session:
+        return redirect("/login_page")
+
+    return render_template("add_complaint.html", is_needs=True)
 
 
 @app.route("/save", methods=["POST"])
@@ -652,8 +659,12 @@ def save():
         final_resolution_status = request.form.get("final_resolution_status", "")
         remarks_and_notes = request.form.get("remarks_and_notes", "")
 
+    complaint_type = request.form.get("complaint_type", "Complaint")
+    if complaint_type not in ("Complaint", "Needs"):
+        complaint_type = "Complaint"
+
     conn = get_db()
-    complaint_no = generate_complaint_no(conn)
+    complaint_no = generate_complaint_no(conn, complaint_type)
 
     conn.execute(
         """
@@ -680,9 +691,10 @@ def save():
             before_photo,
             petitioner_application,
             after_photo,
-            status
+            status,
+            complaint_type
         )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
             complaint_no,
@@ -706,12 +718,16 @@ def save():
             before_photo_path,
             petitioner_application_path,
             after_photo_path,
-            "Open"
+            "Open",
+            complaint_type
         )
     )
 
     conn.commit()
     conn.close()
+
+    if complaint_type == "Needs":
+        return redirect("/needs_dashboard")
 
     return redirect("/")
 
@@ -734,7 +750,7 @@ def edit(id):
 
     conn.close()
 
-    return render_template("edit_complaint.html", row=row)
+    return render_template("edit_complaint.html", row=row, is_needs=(row and row["complaint_type"] == "Needs"))
 
 
 @app.route("/update/<int:id>", methods=["POST"])
@@ -750,7 +766,7 @@ def update(id):
 
     existing_row = conn.execute(
         """
-        SELECT before_photo, petitioner_application, after_photo
+        SELECT before_photo, petitioner_application, after_photo, complaint_type
         FROM complaints
         WHERE id=?
         """,
@@ -878,7 +894,11 @@ def update(id):
         )
 
     conn.commit()
+    complaint_type = existing_row["complaint_type"] if existing_row and existing_row["complaint_type"] else "Complaint"
     conn.close()
+
+    if complaint_type == "Needs":
+        return redirect("/needs_dashboard")
 
     return redirect("/")
 
@@ -893,6 +913,9 @@ def resolve(id):
 
     conn = get_db()
 
+    type_row = conn.execute("SELECT complaint_type FROM complaints WHERE id=?", (id,)).fetchone()
+    complaint_type = type_row["complaint_type"] if type_row and type_row["complaint_type"] else "Complaint"
+
     conn.execute(
         """
         UPDATE complaints
@@ -905,6 +928,9 @@ def resolve(id):
 
     conn.commit()
     conn.close()
+
+    if complaint_type == "Needs":
+        return redirect("/needs_dashboard")
 
     return redirect("/")
 
@@ -919,6 +945,9 @@ def delete(id):
 
     conn = get_db()
 
+    type_row = conn.execute("SELECT complaint_type FROM complaints WHERE id=?", (id,)).fetchone()
+    complaint_type = type_row["complaint_type"] if type_row and type_row["complaint_type"] else "Complaint"
+
     conn.execute(
         """
         DELETE FROM complaints
@@ -929,6 +958,9 @@ def delete(id):
 
     conn.commit()
     conn.close()
+
+    if complaint_type == "Needs":
+        return redirect("/needs_dashboard")
 
     return redirect("/")
 
@@ -1029,87 +1061,101 @@ def export_status_details():
     )
 
 
-@app.route("/export")
-def export():
+
+def export_complaints_by_type(complaint_type="Complaint"):
     if "user" not in session:
         return redirect("/login_page")
 
+    if complaint_type not in ("Complaint", "Needs"):
+        complaint_type = "Complaint"
+
     conn = get_db()
 
-    try:
-        if is_admin():
-            query = """
-            SELECT
-                complaint_no AS "Complaint No",
-                id AS "Internal ID",
-                complaint_attender AS "Complaint Attender",
-                complaint_date AS "Complaint Date",
-                zonal_office AS "Zonal Office",
-                petitioner_name AS "Petitioner Name",
-                mobile AS "Mobile",
-                petitioner_address AS "Petitioner Address",
-                ward_no AS "Ward No",
-                category AS "Category",
-                description AS "Description",
-                ward_notification_status AS "Ward Notification Status",
-                ward_representative AS "Ward Representative",
-                response_details AS "Response Details",
-                before_photo AS "Before Action Photo",
-                informed_to_department AS "Informed To Department",
-                inital_action_status AS "Initial Action Status",
-                progress_update_status AS "Progress Update Status",
-                final_resolution_status AS "Final Resolution Status",
-                after_photo AS "After Resolution Photo",
-                remarks_and_notes AS "Remarks And Notes",
-                status AS "Status"
-            FROM complaints
-            ORDER BY id DESC
-            """
-        else:
-            query = """
-            SELECT
-                complaint_no AS "Complaint No",
-                id AS "Internal ID",
-                complaint_attender AS "Complaint Attender",
-                complaint_date AS "Complaint Date",
-                zonal_office AS "Zonal Office",
-                petitioner_name AS "Petitioner Name",
-                mobile AS "Mobile",
-                petitioner_address AS "Petitioner Address",
-                ward_no AS "Ward No",
-                category AS "Category",
-                description AS "Description",
-                ward_notification_status AS "Ward Notification Status",
-                ward_representative AS "Ward Representative",
-                response_details AS "Response Details",
-                before_photo AS "Before Action Photo",
-                status AS "Status"
-            FROM complaints
-            ORDER BY id DESC
-            """
+    if is_admin():
+        query = """
+        SELECT
+            id AS 'ID',
+            complaint_no AS 'Complaint No',
+            complaint_attender AS 'Complaint Attender',
+            complaint_date AS 'Complaint Date',
+            zonal_office AS 'Zonal Office',
+            petitioner_name AS 'Petitioner Name',
+            mobile AS 'Mobile',
+            petitioner_address AS 'Petitioner Address',
+            ward_no AS 'Ward No',
+            category AS 'Category',
+            description AS 'Description',
+            ward_notification_status AS 'Ward Notification Status',
+            ward_representative AS 'Ward Representative',
+            response_details AS 'Response Details',
+            before_photo AS 'Before Action Photo',
+            petitioner_application AS 'Petitioner Application',
+            informed_to_department AS 'Informed To Department',
+            inital_action_status AS 'Initial Action Status',
+            progress_update_status AS 'Progress Update Status',
+            final_resolution_status AS 'Final Resolution Status',
+            after_photo AS 'After Resolution Photo',
+            remarks_and_notes AS 'Remarks And Notes',
+            status AS 'Status',
+            complaint_type AS 'Complaint Type'
+        FROM complaints
+        WHERE complaint_type=%s
+        ORDER BY id DESC
+        """
+    else:
+        query = """
+        SELECT
+            id AS 'ID',
+            complaint_no AS 'Complaint No',
+            complaint_attender AS 'Complaint Attender',
+            complaint_date AS 'Complaint Date',
+            zonal_office AS 'Zonal Office',
+            petitioner_name AS 'Petitioner Name',
+            mobile AS 'Mobile',
+            petitioner_address AS 'Petitioner Address',
+            ward_no AS 'Ward No',
+            category AS 'Category',
+            description AS 'Description',
+            ward_notification_status AS 'Ward Notification Status',
+            ward_representative AS 'Ward Representative',
+            response_details AS 'Response Details',
+            before_photo AS 'Before Action Photo',
+            petitioner_application AS 'Petitioner Application',
+            status AS 'Status',
+            complaint_type AS 'Complaint Type'
+        FROM complaints
+        WHERE complaint_type=%s
+        ORDER BY id DESC
+        """
 
-        cur = conn.execute(query)
-        rows = cur.fetchall()
-        columns = [desc[0] for desc in cur.description]
+    df = pd.read_sql_query(query, conn.raw, params=(complaint_type,))
+    conn.close()
 
-        df = pd.DataFrame(rows, columns=columns)
+    output = io.BytesIO()
 
-        output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name=complaint_type)
 
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="Complaints")
+    output.seek(0)
 
-        output.seek(0)
+    filename = "needs_complaints.xlsx" if complaint_type == "Needs" else "complaints.xlsx"
 
-        return send_file(
-            output,
-            as_attachment=True,
-            download_name="complaints.xlsx",
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
-    finally:
-        conn.close()
+
+@app.route("/export")
+def export():
+    return export_complaints_by_type("Complaint")
+
+
+@app.route("/export_needs")
+def export_needs():
+    return export_complaints_by_type("Needs")
 
 
 @app.route("/storage-test")

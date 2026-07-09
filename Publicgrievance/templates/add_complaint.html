@@ -191,13 +191,14 @@
     <div class="page-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="page-title mb-0">Public Grievance Registration</h2>
-                <small class="text-muted">Register new public complaint details</small>
+                <h2 class="page-title mb-0">{% if is_needs %}Needs Complaint Registration{% else %}Public Grievance Registration{% endif %}</h2>
+                <small class="text-muted">{% if is_needs %}Register new needs complaint details{% else %}Register new public complaint details{% endif %}</small>
             </div>
-            <a href="/" class="btn btn-secondary">← Back</a>
+            <a href="{% if is_needs %}/needs_dashboard{% else %}/{% endif %}" class="btn btn-secondary">← Back</a>
         </div>
 
         <form action="/save" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="complaint_type" value="{% if is_needs %}Needs{% else %}Complaint{% endif %}">
 
             <div class="card section-card">
                 <div class="card-header text-white" style="background:#7a0019;">Complaint Information</div>

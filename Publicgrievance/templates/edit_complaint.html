@@ -202,7 +202,7 @@
             <a href="/set_language/en" class="btn btn-sm {% if current_lang == 'en' %}btn-primary{% else %}btn-outline-primary{% endif %}">English</a>
             <a href="/set_language/ta" class="btn btn-sm {% if current_lang == 'ta' %}btn-primary{% else %}btn-outline-primary{% endif %}">தமிழ்</a>
         </div>
-            <a href="/" class="btn btn-secondary">← {% if current_lang == 'ta' %}திரும்ப{% else %}Back{% endif %}</a>
+            <a href="{% if is_needs %}/needs_dashboard{% else %}/{% endif %}" class="btn btn-secondary">← {% if current_lang == 'ta' %}திரும்ப{% else %}Back{% endif %}</a>
         </div>
 
         <form action="/update/{{ row['id'] }}" method="POST" enctype="multipart/form-data">

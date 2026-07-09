@@ -153,7 +153,7 @@
     <div class="dashboard-card">
 
         <h2 class="dashboard-title text-center mb-4">
-            {% if current_lang == 'ta' %}மக்கள் குறைதீர் முகப்பு பலகை{% else %}Public Grievance Dashboard{% endif %}
+            {% if is_needs_dashboard %}{% if current_lang == 'ta' %}தேவைகள் முகப்பு பலகை{% else %}Needs Dashboard{% endif %}{% else %}{% if current_lang == 'ta' %}மக்கள் குறைதீர் முகப்பு பலகை{% else %}Complaint Dashboard{% endif %}{% endif %}
         </h2>
         <div class="text-center mb-2">
             <span class="fw-bold">🌐 Version / மொழி:</span>
@@ -164,28 +164,28 @@
         <div class="row g-4">
 
             <div class="col-md-3">
-                <a href="/dashboard?status=total" class="count-card total-card">
+                <a href="{% if is_needs_dashboard %}/needs_dashboard?status={% else %}/dashboard?status={% endif %}total" class="count-card total-card">
                     <h4>{% if current_lang == "ta" %}மொத்த புகார்கள்{% else %}Total Complaints{% endif %}</h4>
                     <div class="count-number">{{ total }}</div>
                 </a>
             </div>
 
             <div class="col-md-3">
-                <a href="/dashboard?status=open" class="count-card open-card">
+                <a href="{% if is_needs_dashboard %}/needs_dashboard?status={% else %}/dashboard?status={% endif %}open" class="count-card open-card">
                     <h4>{% if current_lang == "ta" %}நிலுவை புகார்கள்{% else %}Open Complaints{% endif %}</h4>
                     <div class="count-number">{{ open_count }}</div>
                 </a>
             </div>
 
             <div class="col-md-3">
-                <a href="/dashboard?status=in_progress" class="count-card inprogress-card">
+                <a href="{% if is_needs_dashboard %}/needs_dashboard?status={% else %}/dashboard?status={% endif %}in_progress" class="count-card inprogress-card">
                     <h4>{% if current_lang == "ta" %}செயல்பாட்டில் உள்ள புகார்கள்{% else %}In Progress Complaints{% endif %}</h4>
                     <div class="count-number">{{ in_progress }}</div>
                 </a>
             </div>
 
             <div class="col-md-3">
-                <a href="/dashboard?status=resolved" class="count-card resolved-card">
+                <a href="{% if is_needs_dashboard %}/needs_dashboard?status={% else %}/dashboard?status={% endif %}resolved" class="count-card resolved-card">
                     <h4>{% if current_lang == "ta" %}தீர்வு செய்யப்பட்ட புகார்கள்{% else %}Resolved Complaints{% endif %}</h4>
                     <div class="count-number">{{ resolved }}</div>
                 </a>
@@ -203,7 +203,8 @@
     <div class="filter-card">
         <h4 class="dashboard-title mb-3">{% if current_lang == "ta" %}நிலை விவரங்கள்{% else %}Status Details{% endif %}</h4>
 
-        <form action="/dashboard" method="GET" class="row g-3 align-items-end">
+        <form action="{% if is_needs_dashboard %}/needs_dashboard{% else %}/dashboard{% endif %}" method="GET" class="row g-3 align-items-end">
+            <input type="hidden" name="complaint_type" value="{% if is_needs_dashboard %}Needs{% else %}Complaint{% endif %}">
             <div class="col-md-2">
                 <label class="form-label fw-bold">{% if current_lang == "ta" %}நிலை{% else %}Status{% endif %}</label>
                 <select name="status" class="form-control">
@@ -272,7 +273,7 @@
                 <button type="submit" formaction="/export_status_details" class="btn btn-success flex-fill">
                     Export Excel
                 </button>
-                <a href="/dashboard" class="btn btn-secondary flex-fill">{% if current_lang == "ta" %}அழிக்க{% else %}Clear{% endif %}</a>
+                <a href="{% if is_needs_dashboard %}/needs_dashboard{% else %}/dashboard{% endif %}" class="btn btn-secondary flex-fill">{% if current_lang == "ta" %}அழிக்க{% else %}Clear{% endif %}</a>
             </div>
         </form>
 
