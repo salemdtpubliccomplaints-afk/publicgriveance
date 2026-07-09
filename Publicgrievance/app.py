@@ -317,15 +317,10 @@ def build_status_filter_query():
 
 def get_dashboard_data(complaint_type="Complaint"):
     selected_status, keyword, ward, category, zonal_office, from_date, to_date, where_sql, params = build_status_filter_query()
-    complaint_type = request.args.get("complaint_type", "Complaint")
-    if complaint_type not in ("Complaint", "Needs"):
-        complaint_type = "Complaint"
-    if where_sql:
-        where_sql = where_sql + " AND complaint_type = ?"
-    else:
-        where_sql = "WHERE complaint_type = ?"
-    params.append(complaint_type)
 
+    # IMPORTANT:
+    # Normal Dashboard must show only complaint_type='Complaint'
+    # Needs Dashboard must show only complaint_type='Needs'
     if where_sql:
         where_sql = where_sql + " AND complaint_type = ?"
     else:
@@ -446,7 +441,6 @@ def get_dashboard_data(complaint_type="Complaint"):
         dashboard_title="Needs Dashboard" if complaint_type == "Needs" else "Complaint Dashboard",
         is_needs_dashboard=(complaint_type == "Needs")
     )
-
 
 
 def validate_required_complaint_fields():
