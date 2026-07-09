@@ -186,7 +186,7 @@
 <div class="container-fluid mt-3">
 
     <div class="dashboard-card mb-3">
-        <h2 class="dashboard-title text-center mb-3">{% if current_lang == "ta" %}மக்கள் குறைதீர் முகப்பு{% else %}Public Grievance Dashboard{% endif %}</h2>
+        <h2 class="dashboard-title text-center mb-3">{% if is_needs_list %}{% if current_lang == "ta" %}தேவைகள் புகார் பட்டியல்{% else %}Needs Complaint List{% endif %}{% else %}{% if current_lang == "ta" %}மக்கள் குறைதீர் முகப்பு{% else %}Public Grievance Dashboard{% endif %}{% endif %}</h2>
 
         <div class="text-center mb-2">
             <span class="fw-bold">🌐 Version / மொழி:</span>
@@ -200,12 +200,15 @@
             <a href="/needs_dashboard" class="btn btn-dark btn-sm">📊 {% if current_lang == "ta" %}தேவைகள் முகப்பு{% else %}Needs Dashboard{% endif %}</a>
             <a href="/export" class="btn btn-warning btn-sm">{% if current_lang == "ta" %}📥 புகார் Excel{% else %}📥 Export Complaint Excel{% endif %}</a>
             <a href="/export_needs" class="btn btn-outline-warning btn-sm">📥 {% if current_lang == "ta" %}தேவைகள் Excel{% else %}Export Needs Excel{% endif %}</a>
+            {% if is_needs_list %}
+            <a href="/" class="btn btn-outline-primary btn-sm">📋 {% if current_lang == "ta" %}புகார் பட்டியல்{% else %}View Add Complaints{% endif %}</a>
+            {% endif %}
             <a href="/logout" class="btn btn-danger btn-sm">{% if current_lang == "ta" %}🚪 வெளியேறு{% else %}🚪 Logout{% endif %}</a>
         </div>
     </div>
 
     <div class="search-box mb-3">
-        <form action="/search">
+        <form action="{% if is_needs_list %}/needs_search{% else %}/search{% endif %}">
             <div class="row g-2 align-items-center">
                 <div class="col-md-6">
                     <input class="form-control" name="keyword" placeholder="{% if current_lang == 'ta' %}புகார் எண் / மனுதாரர் பெயர் / மொபைல் / வார்டு / பிரிவு / மண்டல அலுவலகம் மூலம் தேடவும்{% else %}Search by Complaint No / Petitioner Name / Mobile / Ward No / Category / Zonal Office{% endif %}">
@@ -219,6 +222,12 @@
             </div>
         </form>
     </div>
+
+    {% if is_needs_list %}
+    <div class="alert alert-info">
+        Currently showing <strong>Needs Add Complaint</strong> records only.
+    </div>
+    {% endif %}
 
     <div class="table-container">
         <table class="table table-bordered table-hover table-sm">

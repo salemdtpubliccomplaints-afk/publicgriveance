@@ -541,7 +541,28 @@ def home():
 
     conn.close()
 
-    return render_template("complaints.html", complaints=complaints)
+    return render_template("complaints.html", complaints=complaints, is_needs_list=False)
+
+
+@app.route("/needs")
+def needs_list():
+    if "user" not in session:
+        return redirect("/login_page")
+
+    conn = get_db()
+
+    complaints = conn.execute(
+        """
+        SELECT *
+        FROM complaints
+        WHERE complaint_type='Needs'
+        ORDER BY id DESC
+        """
+    ).fetchall()
+
+    conn.close()
+
+    return render_template("complaints.html", complaints=complaints, is_needs_list=True)
 
 
 @app.route("/dashboard")
@@ -598,6 +619,45 @@ def search():
     conn.close()
 
     return render_template("complaints.html", complaints=complaints)
+
+
+
+@app.route("/needs_search")
+def needs_search():
+    if "user" not in session:
+        return redirect("/login_page")
+
+    keyword = request.args.get("keyword", "")
+
+    conn = get_db()
+
+    complaints = conn.execute(
+        """
+        SELECT *
+        FROM complaints
+        WHERE complaint_type='Needs'
+        AND (
+             complaint_no LIKE ?
+        OR petitioner_name LIKE ?
+        OR mobile LIKE ?
+        OR ward_no LIKE ?
+        OR category LIKE ?
+        OR zonal_office LIKE ?
+        )
+        """,
+        (
+            f"%{keyword}%",
+            f"%{keyword}%",
+            f"%{keyword}%",
+            f"%{keyword}%",
+            f"%{keyword}%",
+            f"%{keyword}%"
+        )
+    ).fetchall()
+
+    conn.close()
+
+    return render_template("complaints.html", complaints=complaints, is_needs_list=True)
 
 
 @app.route("/add")
