@@ -198,7 +198,10 @@
         </div>
     </div>
 
-    {% if session.get('role') == 'Admin' %}
+    <div class="alert alert-warning text-center">
+    Logged-in User: {{ session.get('user') }} |
+    Role: {{ session.get('role') }}
+</div>
 
     <div class="filter-card">
         <h4 class="dashboard-title mb-3">{% if current_lang == "ta" %}நிலை விவரங்கள்{% else %}Status Details{% endif %}</h4>
